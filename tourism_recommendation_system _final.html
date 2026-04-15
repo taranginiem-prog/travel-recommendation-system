@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>WanderMind – Tourism Recommendation System</title>
+<script>window.GOOGLE_API_KEY = "YOUR_API_KEY"; /* ← paste your key here */</script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap');
+:root{--bg:#0b0f1a;--surface:#131928;--card:#1a2235;--accent:#f0a500;--accent2:#e05c2a;--green:#2ecc71;--text:#e8eaf0;--muted:#7a8499;--border:#252f45;--radius:14px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;background:linear-gradient(90deg,#0b0f1a,#131928);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:300;}
+.logo{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:900;color:var(--accent);}
+.logo span{color:var(--accent2);}
+.tagline{font-size:.7rem;color:var(--muted);margin-top:1px;}
+.api-badge{font-size:.72rem;padding:4px 11px;border-radius:20px;background:rgba(46,204,113,.12);border:1px solid rgba(46,204,113,.3);color:var(--green);}
+.app{display:flex;min-height:calc(100vh - 60px);}
+.sidebar{width:210px;min-width:210px;background:var(--surface);border-right:1px solid var(--border);padding:18px 0;display:flex;flex-direction:column;gap:2px;overflow-y:auto;}
+.sidebar-label{font-size:.6rem;font-weight:700;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;padding:10px 18px 4px;}
+.nav-btn{display:flex;align-items:center;gap:8px;padding:9px 18px;font-size:.82rem;font-weight:500;color:var(--muted);cursor:pointer;border:none;background:none;text-align:left;transition:all .18s;width:100%;}
+.nav-btn:hover{color:var(--text);background:rgba(255,255,255,.04);}
+.nav-btn.active{color:var(--accent);background:rgba(240,165,0,.08);border-right:3px solid var(--accent);}
+.content{flex:1;padding:26px 34px;overflow-y:auto;}
+.section{display:none;animation:fadeIn .28s ease;}
+.section.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+h1.page-title{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:900;margin-bottom:4px;}
+.page-subtitle{font-size:.85rem;color:var(--muted);margin-bottom:22px;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 22px;margin-bottom:16px;}
+.card-title{font-size:.9rem;font-weight:600;color:var(--accent);margin-bottom:12px;}
+label{display:block;font-size:.79rem;color:var(--muted);margin-bottom:4px;font-weight:500;}
+input[type="text"],input[type="number"],select,textarea{width:100%;padding:9px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.86rem;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .18s;}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);}
+textarea{resize:vertical;min-height:70px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:13px;}
+.form-group{margin-bottom:13px;}
+.chip-group{display:flex;flex-wrap:wrap;gap:6px;}
+.chip{padding:5px 12px;border-radius:20px;font-size:.78rem;font-weight:500;border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;transition:all .18s;user-select:none;}
+.chip:hover{border-color:var(--accent);color:var(--text);}
+.chip.selected{background:rgba(240,165,0,.15);border-color:var(--accent);color:var(--accent);}
+.btn{padding:9px 22px;border-radius:8px;font-size:.86rem;font-weight:600;border:none;cursor:pointer;transition:all .18s;font-family:'DM Sans',sans-serif;display:inline-flex;align-items:center;gap:6px;}
+.btn-primary{background:var(--accent);color:#0b0f1a;}
+.btn-primary:hover{background:#ffc038;transform:translateY(-1px);}
+.btn-secondary{background:var(--surface);color:var(--text);border:1px solid var(--border);}
+.btn-secondary:hover{background:var(--card);}
+.dest-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;}
+.dest-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:transform .2s,box-shadow .2s,border-color .2s;}
+.dest-card:hover{transform:translateY(-4px);box-shadow:0 14px 36px rgba(0,0,0,.4);border-color:rgba(240,165,0,.5);}
+.dest-thumb{height:110px;display:flex;align-items:center;justify-content:center;font-size:3rem;position:relative;overflow:hidden;background:linear-gradient(135deg,#1a2235,#252f45);}
+.climate-badge{position:absolute;top:8px;right:8px;font-size:.63rem;padding:2px 7px;border-radius:10px;font-weight:700;z-index:2;}
+.cb-sunny{background:rgba(240,165,0,.92);color:#0b0f1a;}
+.cb-cold{background:rgba(52,152,219,.92);color:#fff;}
+.cb-rainy{background:rgba(108,117,125,.92);color:#fff;}
+.cb-mild{background:rgba(46,204,113,.92);color:#0b0f1a;}
+.dest-body{padding:13px;}
+.dest-name{font-weight:700;font-size:.94rem;margin-bottom:2px;}
+.dest-state{font-size:.73rem;color:var(--muted);margin-bottom:6px;}
+.dest-tags{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:8px;}
+.dest-tag{font-size:.66rem;padding:2px 6px;border-radius:8px;background:rgba(240,165,0,.1);color:var(--accent);border:1px solid rgba(240,165,0,.2);}
+.dest-footer{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;}
+.dest-budget{font-size:.79rem;font-weight:600;color:var(--green);}
+.dest-stars{color:var(--accent);font-size:.77rem;}
+.explore-btn{width:100%;padding:7px;background:linear-gradient(135deg,rgba(240,165,0,.18),rgba(224,92,42,.12));color:var(--accent);border:1px solid rgba(240,165,0,.3);border-radius:7px;cursor:pointer;font-weight:700;font-size:.74rem;transition:all .18s;font-family:'DM Sans',sans-serif;}
+.explore-btn:hover{background:var(--accent);color:#0b0f1a;}
+.filter-bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;align-items:center;}
+.filter-bar select,.filter-bar input{max-width:160px;padding:7px 11px;font-size:.82rem;}
+.result-info{color:var(--muted);font-size:.83rem;margin-bottom:14px;}
+.result-info strong{color:var(--accent);}
+.no-results{text-align:center;padding:40px 20px;color:var(--muted);grid-column:1/-1;}
+/* MODAL */
+#detailOverlay{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:500;display:none;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;}
+#detailOverlay.open{display:flex;}
+#detailModal{background:var(--bg);border:1px solid var(--border);border-radius:20px;width:100%;max-width:940px;overflow:hidden;margin:auto;}
+.modal-hero{height:200px;display:flex;align-items:flex-end;padding:18px 22px;position:relative;overflow:hidden;}
+.modal-hero-bg{position:absolute;inset:0;background:linear-gradient(135deg,#1a2235,#252f45);}
+.modal-hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.45;z-index:1;display:none;}
+.modal-hero-ov{position:absolute;inset:0;background:linear-gradient(to top,rgba(11,15,26,.88),transparent 60%);z-index:2;}
+.modal-close{position:absolute;top:12px;right:14px;background:rgba(0,0,0,.6);border:none;color:#fff;font-size:1.1rem;cursor:pointer;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:10;}
+.modal-hero-content{position:relative;z-index:3;}
+.modal-hero h2{font-family:'Playfair Display',serif;font-size:1.85rem;font-weight:900;text-shadow:0 2px 12px rgba(0,0,0,.8);}
+.modal-hero p{color:rgba(255,255,255,.72);font-size:.82rem;margin-top:3px;}
+.modal-hero-emoji{font-size:2.5rem;margin-bottom:5px;}
+.modal-tabs{display:flex;border-bottom:1px solid var(--border);background:var(--surface);overflow-x:auto;}
+.modal-tab{padding:11px 18px;font-size:.81rem;font-weight:600;color:var(--muted);cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;transition:all .18s;white-space:nowrap;flex-shrink:0;}
+.modal-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.modal-body{padding:20px;}
+/* PLACES */
+.places-list{display:flex;flex-direction:column;gap:10px;}
+.place-item{display:flex;gap:12px;align-items:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;transition:border-color .18s;}
+.place-item:hover{border-color:rgba(240,165,0,.4);}
+.place-photo{width:64px;height:64px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.5rem;overflow:hidden;background:var(--card);}
+.place-photo img{width:100%;height:100%;object-fit:cover;}
+.place-info{flex:1;}
+.place-name{font-weight:600;font-size:.88rem;margin-bottom:2px;}
+.place-addr{font-size:.72rem;color:var(--muted);margin-bottom:4px;line-height:1.3;}
+.place-meta{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.place-rating{font-size:.75rem;color:var(--accent);font-weight:600;}
+.place-type{font-size:.67rem;padding:2px 6px;border-radius:8px;background:rgba(240,165,0,.1);color:var(--accent);border:1px solid rgba(240,165,0,.18);}
+.open-yes{font-size:.67rem;padding:2px 6px;border-radius:8px;font-weight:600;background:rgba(46,204,113,.12);color:var(--green);border:1px solid rgba(46,204,113,.25);}
+.open-no{font-size:.67rem;padding:2px 6px;border-radius:8px;font-weight:600;background:rgba(231,76,60,.1);color:#e74c3c;border:1px solid rgba(231,76,60,.2);}
+/* HOTELS */
+.hotel-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:11px;}
+.hotel-card{background:var(--surface);border:1px solid var(--border);border-radius:11px;overflow:hidden;transition:transform .18s,border-color .18s;}
+.hotel-card:hover{transform:translateY(-2px);border-color:rgba(240,165,0,.4);}
+.hotel-photo{height:95px;display:flex;align-items:center;justify-content:center;font-size:2.2rem;overflow:hidden;position:relative;background:var(--card);}
+.hotel-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.hotel-body{padding:10px 12px;}
+.hotel-name{font-weight:700;font-size:.86rem;margin-bottom:2px;}
+.hotel-addr{font-size:.71rem;color:var(--muted);margin-bottom:5px;line-height:1.3;}
+.hotel-foot{display:flex;justify-content:space-between;align-items:center;}
+.hotel-rating{color:var(--accent);font-size:.77rem;font-weight:600;}
+.hotel-price{font-size:.77rem;font-weight:600;color:var(--green);}
+/* MAP TAB */
+.map-container{position:relative;border-radius:12px;overflow:hidden;border:1px solid var(--border);}
+#googleMap{width:100%;height:380px;}
+.map-iframe{width:100%;height:380px;border:none;}
+.map-info-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:12px;font-size:.83rem;}
+.map-info-bar .coords{color:var(--muted);font-size:.76rem;}
+.open-gmaps-btn{padding:6px 14px;background:var(--accent);color:#0b0f1a;border:none;border-radius:7px;font-size:.77rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .18s;}
+.open-gmaps-btn:hover{background:#ffc038;}
+/* MISC */
+.spinner{display:flex;flex-direction:column;align-items:center;gap:10px;padding:32px 0;color:var(--muted);font-size:.84rem;}
+.spin{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.sample-notice{font-size:.76rem;color:var(--accent);background:rgba(240,165,0,.07);border:1px solid rgba(240,165,0,.2);border-radius:7px;padding:6px 11px;margin-bottom:11px;}
+.api-alert{background:rgba(240,165,0,.07);border:1px solid rgba(240,165,0,.25);border-radius:10px;padding:12px 16px;font-size:.8rem;margin-bottom:16px;line-height:1.6;}
+.api-alert code{background:rgba(0,0,0,.3);padding:1px 5px;border-radius:4px;font-size:.77rem;color:var(--accent);}
+table{width:100%;border-collapse:collapse;font-size:.83rem;}
+th{text-align:left;color:var(--muted);font-weight:600;padding:7px 10px;border-bottom:1px solid var(--border);font-size:.73rem;text-transform:uppercase;letter-spacing:.6px;}
+td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.04);}
+tr:last-child td{border-bottom:none;}
+.total-row td{font-weight:700;color:var(--accent);border-top:1px solid var(--border);}
+.season-bar-wrap{margin-bottom:8px;}
+.season-label{display:flex;justify-content:space-between;font-size:.76rem;margin-bottom:2px;}
+.season-bar-bg{background:var(--surface);border-radius:4px;height:6px;overflow:hidden;}
+.season-bar-fill{height:100%;border-radius:4px;transition:width .55s ease;}
+.review-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:10px;}
+.chat-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;max-height:280px;overflow-y:auto;margin-bottom:12px;display:flex;flex-direction:column;gap:9px;}
+.msg{display:flex;gap:8px;align-items:flex-start;}
+.msg-avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.82rem;flex-shrink:0;}
+.msg-bot .msg-avatar{background:rgba(240,165,0,.2);color:var(--accent);}
+.msg-user .msg-avatar{background:rgba(224,92,42,.2);color:var(--accent2);}
+.msg-bubble{background:var(--card);border-radius:9px;padding:8px 12px;font-size:.82rem;line-height:1.5;max-width:85%;}
+.msg-user{flex-direction:row-reverse;}
+.msg-user .msg-bubble{background:rgba(240,165,0,.1);border:1px solid rgba(240,165,0,.18);}
+.chat-input-row{display:flex;gap:8px;}
+.chat-input-row input{flex:1;}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:11px;margin-bottom:16px;}
+.stat-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:13px;text-align:center;}
+.stat-num{font-size:1.4rem;font-weight:700;color:var(--accent);font-family:'Playfair Display',serif;}
+.stat-lbl{font-size:.71rem;color:var(--muted);margin-top:2px;}
+#toast{position:fixed;bottom:22px;right:22px;padding:9px 18px;border-radius:8px;font-weight:600;font-size:.82rem;display:none;z-index:999;animation:slideUp .25s ease;}
+#toast.success{background:var(--green);color:#0b0f1a;}
+#toast.error{background:#e74c3c;color:#fff;}
+#toast.info{background:#3498db;color:#fff;}
+@keyframes slideUp{from{transform:translateY(14px);opacity:0}to{transform:translateY(0);opacity:1}}
+@media(max-width:700px){.sidebar{display:none;}.content{padding:16px 12px;}.form-row{grid-template-columns:1fr;}.dest-grid{grid-template-columns:1fr 1fr;}}
+@media(max-width:480px){.dest-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<header>
+  <div><div class="logo">Wander<span>Mind</span></div><div class="tagline">Tourism Destination Recommendation System · 50+ Locations</div></div>
+  <div class="api-badge">🌐 Google Places + Maps</div>
+</header>
+<div class="app">
+  <nav class="sidebar">
+    <div class="sidebar-label">Modules</div>
+    <button class="nav-btn active" onclick="goTo('preferences')">🎯 Preferences</button>
+    <button class="nav-btn" onclick="goTo('destinations')">🗺️ All Destinations</button>
+    <button class="nav-btn" onclick="goTo('results')">✨ Recommendations</button>
+    <button class="nav-btn" onclick="goTo('budget')">💰 Budget Estimator</button>
+    <button class="nav-btn" onclick="goTo('season')">🌤️ Season & Climate</button>
+    <button class="nav-btn" onclick="goTo('feedback')">⭐ Reviews & Ratings</button>
+    <button class="nav-btn" onclick="goTo('security')">🔒 Security & Reports</button>
+    <div class="sidebar-label" style="margin-top:6px;">Special</div>
+    <button class="nav-btn" onclick="goTo('discovery')">🤔 Smart Discovery</button>
+  </nav>
+  <main class="content">
+
+    <section id="preferences" class="section active">
+      <h1 class="page-title">User Preferences</h1>
+      <p class="page-subtitle">Module 1 — Pick your climate first. Only destinations matching that climate will appear.</p>
+      <div class="card">
+        <div class="card-title">🙋 Basic Details</div>
+        <div class="form-row">
+          <div class="form-group"><label>Your Name</label><input type="text" id="uname" placeholder="e.g. Ravi Kumar"/></div>
+          <div class="form-group"><label>Budget (₹)</label><input type="number" id="ubudget" placeholder="e.g. 25000" min="1000"/></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Travellers</label><select id="utrav"><option>1 – Solo</option><option>2 – Couple</option><option>3-5 – Family</option><option>6+ – Group</option></select></div>
+          <div class="form-group"><label>Duration</label><select id="udur"><option>Weekend (2-3 days)</option><option>Short Trip (4-6 days)</option><option>1 Week</option><option>2 Weeks</option></select></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">❤️ Travel Interests</div>
+        <div class="chip-group" id="interestChips">
+          <span class="chip" onclick="toggleChip(this)">🏖️ Beach</span><span class="chip" onclick="toggleChip(this)">🏔️ Mountains</span>
+          <span class="chip" onclick="toggleChip(this)">🏛️ Heritage</span><span class="chip" onclick="toggleChip(this)">🌿 Nature</span>
+          <span class="chip" onclick="toggleChip(this)">🎡 Adventure</span><span class="chip" onclick="toggleChip(this)">🍛 Food Tourism</span>
+          <span class="chip" onclick="toggleChip(this)">🕌 Religious</span><span class="chip" onclick="toggleChip(this)">🎭 Culture</span>
+          <span class="chip" onclick="toggleChip(this)">🌃 City Life</span><span class="chip" onclick="toggleChip(this)">🧘 Wellness</span>
+          <span class="chip" onclick="toggleChip(this)">🌊 Water Sports</span><span class="chip" onclick="toggleChip(this)">📸 Photography</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🌡️ Climate Preference <span style="font-size:.75rem;color:var(--muted);font-weight:400;">— ONLY matching climate destinations shown</span></div>
+        <div class="chip-group" id="climateChips">
+          <span class="chip" onclick="toggleChipSingle(this,'climateChips')">☀️ Sunny &amp; Hot</span>
+          <span class="chip" onclick="toggleChipSingle(this,'climateChips')">❄️ Cold &amp; Snowy</span>
+          <span class="chip" onclick="toggleChipSingle(this,'climateChips')">🌧️ Monsoon / Rainy</span>
+          <span class="chip" onclick="toggleChipSingle(this,'climateChips')">🍃 Pleasant / Mild</span>
+          <span class="chip" onclick="toggleChipSingle(this,'climateChips')">🌈 Any Climate</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="findRecommendations()">🔍 Find Destinations</button>
+        <button class="btn btn-secondary" onclick="goTo('discovery')">🤔 Don't know where to go?</button>
+      </div>
+    </section>
+
+    <section id="destinations" class="section">
+      <h1 class="page-title">All Destinations (50+)</h1>
+      <p class="page-subtitle">Module 2 — Filter by climate or type. Click <strong style="color:var(--accent)">Explore</strong> to see Google Maps + Attractions + Hotels.</p>
+      <div id="apiAlertDB"></div>
+      <div class="filter-bar">
+        <input type="text" id="dbSearch" placeholder="🔍 Search..." style="max-width:160px;" oninput="renderDestDB()"/>
+        <select id="dbType" onchange="renderDestDB()">
+          <option value="all">All Types</option><option value="Beach">🏖️ Beach</option><option value="Mountains">🏔️ Mountains</option>
+          <option value="Heritage">🏛️ Heritage</option><option value="Nature">🌿 Nature</option><option value="Religious">🕌 Religious</option>
+          <option value="Adventure">🎡 Adventure</option><option value="Wellness">🧘 Wellness</option><option value="City Life">🌃 City Life</option>
+        </select>
+        <select id="dbClimate" onchange="renderDestDB()">
+          <option value="all">All Climates</option>
+          <option value="Sunny &amp; Hot">☀️ Sunny &amp; Hot</option>
+          <option value="Cold &amp; Snowy">❄️ Cold &amp; Snowy</option>
+          <option value="Monsoon / Rainy">🌧️ Monsoon</option>
+          <option value="Pleasant / Mild">🍃 Pleasant / Mild</option>
+        </select>
+        <select id="dbBudget" onchange="renderDestDB()">
+          <option value="999999">Any Budget</option><option value="8000">Under ₹8,000</option>
+          <option value="15000">Under ₹15,000</option><option value="25000">Under ₹25,000</option><option value="40000">Under ₹40,000</option>
+        </select>
+      </div>
+      <div class="result-info" id="dbInfo"></div>
+      <div class="dest-grid" id="destGrid"></div>
+    </section>
+
+    <section id="results" class="section">
+      <h1 class="page-title">Your Recommendations</h1>
+      <p class="page-subtitle">Module 3 — Only your chosen climate is shown. Click <strong style="color:var(--accent)">Explore</strong> for the interactive map, places &amp; hotels.</p>
+      <div class="result-info" id="matchCount">Set preferences first, then click Find Destinations.</div>
+      <div class="dest-grid" id="resultsGrid"></div>
+    </section>
+
+    <section id="budget" class="section">
+      <h1 class="page-title">Budget Estimator</h1>
+      <p class="page-subtitle">Module 4 — Full travel cost breakdown.</p>
+      <div class="card"><div class="card-title">📋 Trip Details</div>
+        <div class="form-row">
+          <div class="form-group"><label>Destination</label><select id="budgetDest" onchange="calcBudget()">
+            <option>Goa</option><option>Ooty</option><option>Manali</option><option>Munnar</option><option>Varanasi</option>
+            <option>Andaman Islands</option><option>Jaipur</option><option>Rishikesh</option><option>Leh Ladakh</option>
+            <option>Darjeeling</option><option>Puducherry</option><option>Coorg</option><option>Shimla</option>
+            <option>Hampi</option><option>Agra</option><option>Lakshadweep</option><option>Mysuru</option>
+            <option>Kodaikanal</option><option>Auli</option><option>Spiti Valley</option>
+          </select></div>
+          <div class="form-group"><label>Days</label><input type="number" id="budgetDays" value="3" min="1" max="30" oninput="calcBudget()"/></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Travellers</label><input type="number" id="budgetPeople" value="2" min="1" oninput="calcBudget()"/></div>
+          <div class="form-group"><label>Stay Type</label><select id="budgetStay" onchange="calcBudget()">
+            <option>Budget (Hostel/OYO)</option><option>Mid-range (3-star)</option><option>Luxury (4-5 star)</option>
+          </select></div>
+        </div>
+      </div>
+      <div class="card"><div class="card-title">💸 Cost Breakdown</div>
+        <table><thead><tr><th>Category</th><th>Per Person</th><th>Total</th></tr></thead><tbody id="budgetTable"></tbody></table>
+      </div>
+    </section>
+
+    <section id="season" class="section">
+      <h1 class="page-title">Season &amp; Climate</h1>
+      <p class="page-subtitle">Module 5 — Best months to visit each destination.</p>
+      <div class="form-group" style="max-width:280px;margin-bottom:20px;"><label>Select Destination</label>
+        <select id="seasonDest" onchange="renderSeason()">
+          <option>Goa</option><option>Ooty</option><option>Manali</option><option>Munnar</option><option>Varanasi</option>
+          <option>Andaman Islands</option><option>Jaipur</option><option>Rishikesh</option><option>Leh Ladakh</option>
+          <option>Darjeeling</option><option>Puducherry</option><option>Coorg</option><option>Shimla</option>
+          <option>Hampi</option><option>Agra</option><option>Gulmarg</option><option>Spiti Valley</option>
+        </select>
+      </div>
+      <div class="card"><div class="card-title">📅 Monthly Suitability Score (0–100)</div><div id="seasonBars"></div></div>
+      <div class="card"><div class="card-title">ℹ️ Travel Tips</div><div id="seasonTips"></div></div>
+    </section>
+
+    <section id="feedback" class="section">
+      <h1 class="page-title">Reviews &amp; Ratings</h1>
+      <p class="page-subtitle">Module 6 — Community-based travel reviews.</p>
+      <div class="card"><div class="card-title">✍️ Submit Review</div>
+        <div class="form-row">
+          <div class="form-group"><label>Name</label><input type="text" id="revName" placeholder="Your name"/></div>
+          <div class="form-group"><label>Destination</label><select id="revDest">
+            <option>Goa</option><option>Ooty</option><option>Manali</option><option>Munnar</option>
+            <option>Varanasi</option><option>Leh Ladakh</option><option>Andaman Islands</option><option>Jaipur</option>
+          </select></div>
+        </div>
+        <div class="form-group"><label>Rating</label><div class="chip-group" id="ratingChips">
+          <span class="chip" onclick="toggleChipSingle(this,'ratingChips')">⭐ 1</span>
+          <span class="chip" onclick="toggleChipSingle(this,'ratingChips')">⭐⭐ 2</span>
+          <span class="chip" onclick="toggleChipSingle(this,'ratingChips')">⭐⭐⭐ 3</span>
+          <span class="chip selected" onclick="toggleChipSingle(this,'ratingChips')">⭐⭐⭐⭐ 4</span>
+          <span class="chip" onclick="toggleChipSingle(this,'ratingChips')">⭐⭐⭐⭐⭐ 5</span>
+        </div></div>
+        <div class="form-group"><label>Review</label><textarea id="revText" placeholder="Share your experience..."></textarea></div>
+        <button class="btn btn-primary" onclick="submitReview()">📤 Submit Review</button>
+      </div>
+      <div id="reviewsList"></div>
+    </section>
+
+    <section id="security" class="section">
+      <h1 class="page-title">Security &amp; Reports</h1>
+      <p class="page-subtitle">Module 7 — Data protection and system reports.</p>
+      <div class="stat-grid">
+        <div class="stat-box"><div class="stat-num">🔐</div><div class="stat-lbl">SSL Encrypted</div></div>
+        <div class="stat-box"><div class="stat-num" id="statUsers">4</div><div class="stat-lbl">Active Sessions</div></div>
+        <div class="stat-box"><div class="stat-num" id="statQueries">0</div><div class="stat-lbl">Queries</div></div>
+        <div class="stat-box"><div class="stat-num" id="statReviews">3</div><div class="stat-lbl">Reviews</div></div>
+        <div class="stat-box"><div class="stat-num">50+</div><div class="stat-lbl">Destinations</div></div>
+      </div>
+      <div class="card"><div class="card-title">🛡️ Privacy Settings</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--text);"><input type="checkbox" checked style="accent-color:var(--accent);width:14px;height:14px;"/> Anonymise search data</label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--text);"><input type="checkbox" checked style="accent-color:var(--accent);width:14px;height:14px;"/> Do not share with third parties</label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--text);"><input type="checkbox" style="accent-color:var(--accent);width:14px;height:14px;"/> Allow analytics</label>
+        </div>
+      </div>
+      <div class="card"><div class="card-title">📊 Generate Report</div>
+        <div class="form-row">
+          <div class="form-group"><label>Type</label><select id="reportType"><option>User Query Summary</option><option>Popular Destinations</option><option>Budget Analysis</option><option>Review Analytics</option><option>Climate Distribution</option></select></div>
+          <div class="form-group"><label>Period</label><select id="reportPeriod"><option>This Month</option><option>Last 3 Months</option><option>This Year</option></select></div>
+        </div>
+        <button class="btn btn-primary" onclick="generateReport()">📥 Generate</button>
+      </div>
+      <div class="card" id="reportOutput" style="display:none;"><div class="card-title">📄 Report</div><div id="reportContent" style="font-size:.83rem;line-height:1.8;color:var(--muted);"></div></div>
+    </section>
+
+    <section id="discovery" class="section">
+      <h1 class="page-title">🤔 Smart Discovery</h1>
+      <p class="page-subtitle">Don't know where to go? Tell us your past trips — we'll suggest similar places within your budget!</p>
+      <div class="card"><div class="card-title">💬 Chat with WanderMind</div>
+        <div class="chat-box" id="chatBox">
+          <div class="msg msg-bot"><div class="msg-avatar">🌍</div><div class="msg-bubble">Hi! Not sure where to travel next? Tell me — which place have you visited before that you loved?</div></div>
+        </div>
+        <div class="chat-input-row">
+          <input type="text" id="chatInput" placeholder="e.g. I loved Goa..." onkeydown="if(event.key==='Enter')sendChat()"/>
+          <button class="btn btn-primary" onclick="sendChat()">Send ➤</button>
+        </div>
+      </div>
+      <div id="discoveryResults" style="display:none;">
+        <h2 style="font-size:.93rem;font-weight:600;margin:16px 0 12px;">🎯 Recommended for you — click Explore for maps &amp; places!</h2>
+        <div class="dest-grid" id="discoveryGrid"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- DETAIL MODAL -->
+<div id="detailOverlay">
+  <div id="detailModal">
+    <div class="modal-hero">
+      <div class="modal-hero-bg"></div>
+      <img id="modalHeroImg" alt="" class="modal-hero-img"/>
+      <div class="modal-hero-ov"></div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <div class="modal-hero-content">
+        <div id="modalEmoji" class="modal-hero-emoji"></div>
+        <h2 id="modalTitle"></h2>
+        <p id="modalSubtitle"></p>
+      </div>
+    </div>
+    <div class="modal-tabs">
+      <button class="modal-tab active" onclick="switchTab('map')">🗺️ Map</button>
+      <button class="modal-tab" onclick="switchTab('attractions')">🏛️ Attractions</button>
+      <button class="modal-tab" onclick="switchTab('activities')">🎯 Activities</button>
+      <button class="modal-tab" onclick="switchTab('hotels')">🏨 Hotels</button>
+    </div>
+    <div class="modal-body">
+      <div id="tab-map"></div>
+      <div id="tab-attractions" style="display:none;"></div>
+      <div id="tab-activities" style="display:none;"></div>
+      <div id="tab-hotels" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+/* ── GOOGLE MAPS JS API (for Places + interactive map) ── */
+(function(){
+  var k=window.GOOGLE_API_KEY;
+  if(!k||k==='YOUR_API_KEY')return;
+  var s=document.createElement('script');
+  s.src='https://maps.googleapis.com/maps/api/js?key='+k+'&libraries=places&callback=onMapsReady';
+  s.async=true;s.defer=true;document.head.appendChild(s);
+})();
+window.mapsReady=false;
+window.onMapsReady=function(){window.mapsReady=true;};
+
+/* ══════════════════════════════
+   50+ DESTINATIONS DATA
+══════════════════════════════ */
+var D=[
+  /* ── SUNNY & HOT (Beach / Heritage / Desert) ── */
+  {id:1, name:"Goa",             state:"Goa",              emoji:"🏖️",climate:"Sunny & Hot",    type:["Beach","City Life","Heritage"],      budget:15000,rating:4.5,lat:15.2993,lng:74.1240,tags:["Beach","Nightlife","Portuguese Heritage"]},
+  {id:2, name:"Andaman Islands", state:"A&N Islands",      emoji:"🐠",climate:"Sunny & Hot",    type:["Beach","Adventure","Nature"],        budget:30000,rating:4.7,lat:11.7401,lng:92.6586,tags:["Scuba Diving","Coral Reefs","Sea Beaches"]},
+  {id:3, name:"Lakshadweep",     state:"Lakshadweep",      emoji:"🌴",climate:"Sunny & Hot",    type:["Beach","Water Sports","Nature"],     budget:35000,rating:4.6,lat:10.5667,lng:72.6417,tags:["Lagoons","Snorkelling","Untouched Beaches"]},
+  {id:4, name:"Varkala",         state:"Kerala",            emoji:"🌊",climate:"Sunny & Hot",    type:["Beach","Wellness","Nature"],         budget:9000, rating:4.3,lat:8.7379, lng:76.7155,tags:["Cliff Beach","Ayurveda","Sunsets"]},
+  {id:5, name:"Rameswaram",      state:"Tamil Nadu",        emoji:"🕌",climate:"Sunny & Hot",    type:["Religious","Beach","Heritage"],      budget:6000, rating:4.3,lat:9.2876, lng:79.3129,tags:["Ramanathaswamy Temple","Ram Setu","Pilgrimage"]},
+  {id:6, name:"Mahabalipuram",   state:"Tamil Nadu",        emoji:"🏛️",climate:"Sunny & Hot",    type:["Heritage","Beach","Culture"],        budget:7000, rating:4.2,lat:12.6169,lng:80.1926,tags:["Shore Temple","UNESCO","Rock Carvings"]},
+  {id:7, name:"Puducherry",      state:"Puducherry",        emoji:"🇫🇷",climate:"Sunny & Hot",    type:["Beach","Heritage","City Life"],      budget:10000,rating:4.4,lat:11.9416,lng:79.8083,tags:["French Quarter","Promenade","Auroville"]},
+  {id:8, name:"Jaipur",          state:"Rajasthan",         emoji:"🏰",climate:"Sunny & Hot",    type:["Heritage","Culture","City Life"],    budget:12000,rating:4.4,lat:26.9124,lng:75.7873,tags:["Amber Fort","Pink City","Hawa Mahal"]},
+  {id:9, name:"Jodhpur",         state:"Rajasthan",         emoji:"🔵",climate:"Sunny & Hot",    type:["Heritage","Culture","Photography"],  budget:10000,rating:4.3,lat:26.2389,lng:73.0243,tags:["Blue City","Mehrangarh Fort","Desert"]},
+  {id:10,name:"Jaisalmer",       state:"Rajasthan",         emoji:"🏜️",climate:"Sunny & Hot",    type:["Heritage","Adventure","Photography"],budget:11000,rating:4.5,lat:26.9157,lng:70.9083,tags:["Golden Fort","Camel Safari","Sam Dunes"]},
+  {id:11,name:"Varanasi",        state:"Uttar Pradesh",     emoji:"🕯️",climate:"Sunny & Hot",    type:["Religious","Heritage","Culture"],    budget:7000, rating:4.2,lat:25.3176,lng:82.9739,tags:["Ghats","Ganga Aarti","Oldest City"]},
+  {id:12,name:"Hampi",           state:"Karnataka",         emoji:"🏺",climate:"Sunny & Hot",    type:["Heritage","Culture","Photography"],  budget:6000, rating:4.3,lat:15.3350,lng:76.4600,tags:["Vijayanagara Ruins","UNESCO","Boulders"]},
+  {id:13,name:"Agra",            state:"Uttar Pradesh",     emoji:"🕌",climate:"Sunny & Hot",    type:["Heritage","Culture","Photography"],  budget:8000, rating:4.5,lat:27.1767,lng:78.0081,tags:["Taj Mahal","Agra Fort","Mughal Heritage"]},
+  {id:14,name:"Khajuraho",       state:"Madhya Pradesh",    emoji:"🗿",climate:"Sunny & Hot",    type:["Heritage","Culture","Photography"],  budget:8000, rating:4.3,lat:24.8318,lng:79.9199,tags:["Temple Sculptures","UNESCO","Medieval Art"]},
+  {id:15,name:"Hyderabad",       state:"Telangana",         emoji:"🍖",climate:"Sunny & Hot",    type:["City Life","Heritage","Food Tourism"],budget:9000,rating:4.2,lat:17.3850,lng:78.4867,tags:["Charminar","Biryani","Golconda Fort"]},
+  {id:16,name:"Mathura Vrindavan",state:"Uttar Pradesh",    emoji:"🙏",climate:"Sunny & Hot",    type:["Religious","Heritage","Culture"],    budget:5000, rating:4.4,lat:27.4924,lng:77.6737,tags:["Krishna Birthplace","Holi Festival","Temples"]},
+  {id:17,name:"Dwarka",          state:"Gujarat",           emoji:"🔱",climate:"Sunny & Hot",    type:["Religious","Beach","Heritage"],      budget:7000, rating:4.3,lat:22.2394,lng:68.9678,tags:["Dwarkadhish Temple","Sacred City","Gulf of Kutch"]},
+  {id:18,name:"Rann of Kutch",   state:"Gujarat",           emoji:"🌕",climate:"Sunny & Hot",    type:["Nature","Photography","Culture"],    budget:10000,rating:4.6,lat:23.7337,lng:69.8597,tags:["White Salt Desert","Rann Utsav","Tribal Culture"]},
+  /* ── PLEASANT / MILD ── */
+  {id:19,name:"Ooty",            state:"Tamil Nadu",        emoji:"🌿",climate:"Pleasant / Mild", type:["Nature","Mountains","Photography"],  budget:8000, rating:4.3,lat:11.4102,lng:76.6950,tags:["Tea Gardens","Nilgiris","Botanical Garden"]},
+  {id:20,name:"Munnar",          state:"Kerala",            emoji:"🍃",climate:"Pleasant / Mild", type:["Nature","Mountains","Wellness"],     budget:9000, rating:4.4,lat:10.0889,lng:77.0595,tags:["Tea Estates","Waterfalls","Eravikulam"]},
+  {id:21,name:"Coorg",           state:"Karnataka",         emoji:"☕",climate:"Pleasant / Mild", type:["Nature","Mountains","Wellness"],     budget:10000,rating:4.3,lat:12.3375,lng:75.8069,tags:["Coffee Plantations","Rafting","Misty Forests"]},
+  {id:22,name:"Rishikesh",       state:"Uttarakhand",       emoji:"🧘",climate:"Pleasant / Mild", type:["Adventure","Religious","Wellness"],  budget:8000, rating:4.5,lat:30.0869,lng:78.2676,tags:["Yoga Capital","Rafting","Ganga Aarti"]},
+  {id:23,name:"Mysuru",          state:"Karnataka",         emoji:"👑",climate:"Pleasant / Mild", type:["Heritage","Culture","City Life"],    budget:7000, rating:4.3,lat:12.2958,lng:76.6394,tags:["Mysore Palace","Dasara Festival","Chamundi"]},
+  {id:24,name:"Kodaikanal",      state:"Tamil Nadu",        emoji:"🌺",climate:"Pleasant / Mild", type:["Nature","Mountains","Wellness"],     budget:8000, rating:4.2,lat:10.2381,lng:77.4892,tags:["Star Lake","Pine Forests","Coaker's Walk"]},
+  {id:25,name:"Kerala Backwaters",state:"Kerala",           emoji:"⛵",climate:"Pleasant / Mild", type:["Nature","Culture","Wellness"],       budget:14000,rating:4.6,lat:9.4981, lng:76.3388,tags:["Houseboat","Backwaters","Coconut Groves"]},
+  {id:26,name:"Shimla",          state:"Himachal Pradesh",  emoji:"🏘️",climate:"Pleasant / Mild", type:["Mountains","Heritage","City Life"],  budget:11000,rating:4.2,lat:31.1048,lng:77.1734,tags:["Mall Road","Jakhu Temple","Colonial Heritage"]},
+  {id:27,name:"Nainital",        state:"Uttarakhand",       emoji:"🏔️",climate:"Pleasant / Mild", type:["Nature","Mountains","Photography"],  budget:9000, rating:4.3,lat:29.3919,lng:79.4542,tags:["Naini Lake","Jim Corbett","Snow View Point"]},
+  {id:28,name:"Mussoorie",       state:"Uttarakhand",       emoji:"🌁",climate:"Pleasant / Mild", type:["Mountains","Nature","City Life"],    budget:9000, rating:4.2,lat:30.4598,lng:78.0664,tags:["Queen of Hills","Kempty Falls","Camel's Back Road"]},
+  {id:29,name:"Coimbatore",      state:"Tamil Nadu",        emoji:"🏭",climate:"Pleasant / Mild", type:["City Life","Nature","Wellness"],     budget:6000, rating:4.0,lat:11.0168,lng:76.9558,tags:["Gateway to Ooty","Marudamalai Temple","Isha Yoga"]},
+  {id:30,name:"Alleppey",        state:"Kerala",            emoji:"🛶",climate:"Pleasant / Mild", type:["Nature","Culture","Wellness"],       budget:11000,rating:4.5,lat:9.4981, lng:76.3388,tags:["Venice of East","Houseboat Stay","Backwater Cruise"]},
+  {id:31,name:"Pachmarhi",       state:"Madhya Pradesh",    emoji:"💧",climate:"Pleasant / Mild", type:["Nature","Adventure","Photography"],  budget:7000, rating:4.3,lat:22.4675,lng:78.4337,tags:["Queen of Satpura","Waterfalls","Caves"]},
+  /* ── COLD & SNOWY ── */
+  {id:32,name:"Manali",          state:"Himachal Pradesh",  emoji:"❄️",climate:"Cold & Snowy",    type:["Mountains","Adventure","Nature"],    budget:18000,rating:4.6,lat:32.2432,lng:77.1892,tags:["Snow Peaks","Rohtang Pass","Solang Valley"]},
+  {id:33,name:"Leh Ladakh",      state:"J&K / Ladakh",      emoji:"🦅",climate:"Cold & Snowy",    type:["Mountains","Adventure","Photography"],budget:25000,rating:4.8,lat:34.1526,lng:77.5771,tags:["Pangong Lake","Monasteries","Highest Roads"]},
+  {id:34,name:"Auli",            state:"Uttarakhand",       emoji:"⛷️",climate:"Cold & Snowy",    type:["Mountains","Adventure","Nature"],    budget:14000,rating:4.4,lat:30.5245,lng:79.5616,tags:["Ski Resort","Himalayan Views","Gondola"]},
+  {id:35,name:"Spiti Valley",    state:"Himachal Pradesh",  emoji:"🏔️",climate:"Cold & Snowy",    type:["Mountains","Adventure","Photography"],budget:20000,rating:4.7,lat:31.9700,lng:78.0400,tags:["High Altitude Desert","Monasteries","Stargazing"]},
+  {id:36,name:"Darjeeling",      state:"West Bengal",       emoji:"🍵",climate:"Cold & Snowy",    type:["Mountains","Nature","Photography"],  budget:9000, rating:4.3,lat:27.0360,lng:88.2627,tags:["Tea Gardens","Toy Train","Kanchenjunga"]},
+  {id:37,name:"Gulmarg",         state:"Jammu & Kashmir",   emoji:"🎿",climate:"Cold & Snowy",    type:["Mountains","Adventure","Nature"],    budget:22000,rating:4.6,lat:34.0484,lng:74.3805,tags:["Gondola","Ski Slopes","Snow Sports"]},
+  {id:38,name:"Pahalgam",        state:"Jammu & Kashmir",   emoji:"🌲",climate:"Cold & Snowy",    type:["Mountains","Nature","Adventure"],    budget:14000,rating:4.4,lat:34.0161,lng:75.3150,tags:["Lidder River","Betaab Valley","Meadows"]},
+  {id:39,name:"Tawang",          state:"Arunachal Pradesh", emoji:"🏯",climate:"Cold & Snowy",    type:["Mountains","Heritage","Photography"],budget:18000,rating:4.6,lat:27.5859,lng:91.8594,tags:["Tawang Monastery","Sela Pass","NE India"]},
+  {id:40,name:"Ziro Valley",     state:"Arunachal Pradesh", emoji:"🎋",climate:"Cold & Snowy",    type:["Nature","Culture","Photography"],    budget:14000,rating:4.5,lat:27.5425,lng:93.8242,tags:["Apatani Tribe","Rice Fields","Music Festival"]},
+  {id:41,name:"Sikkim",          state:"Sikkim",            emoji:"🧊",climate:"Cold & Snowy",    type:["Mountains","Nature","Heritage"],     budget:16000,rating:4.5,lat:27.3389,lng:88.6065,tags:["Kangchenjunga Views","Monasteries","Flower Festival"]},
+  /* ── MONSOON / RAINY ── */
+  {id:42,name:"Wayanad",         state:"Kerala",            emoji:"🌧️",climate:"Monsoon / Rainy",  type:["Nature","Adventure","Wildlife"],     budget:9000, rating:4.4,lat:11.6854,lng:76.1320,tags:["Waterfalls","Wildlife","Tea Plantations"]},
+  {id:43,name:"Cherrapunji",     state:"Meghalaya",         emoji:"💧",climate:"Monsoon / Rainy",  type:["Nature","Adventure","Photography"],  budget:11000,rating:4.5,lat:25.2800,lng:91.7300,tags:["Wettest Place","Living Root Bridges","Falls"]},
+  {id:44,name:"Shillong",        state:"Meghalaya",         emoji:"🌄",climate:"Monsoon / Rainy",  type:["Nature","City Life","Culture"],      budget:10000,rating:4.3,lat:25.5788,lng:91.8933,tags:["Scotland of East","Umiam Lake","Music Scene"]},
+  {id:45,name:"Coorg (Monsoon)", state:"Karnataka",         emoji:"🌿",climate:"Monsoon / Rainy",  type:["Nature","Wildlife","Photography"],   budget:8000, rating:4.3,lat:12.4244,lng:75.7382,tags:["Coffee in Rain","Misty Valleys","Elephants"]},
+  {id:46,name:"Agumbe",          state:"Karnataka",         emoji:"🐍",climate:"Monsoon / Rainy",  type:["Nature","Wildlife","Photography"],   budget:6000, rating:4.4,lat:13.5007,lng:75.0933,tags:["Cherrapunji of South","King Cobra","Sunset Point"]},
+  {id:47,name:"Valley of Flowers",state:"Uttarakhand",      emoji:"🌸",climate:"Monsoon / Rainy",  type:["Nature","Photography","Adventure"],  budget:13000,rating:4.8,lat:30.7283,lng:79.6057,tags:["UNESCO Heritage","Alpine Flowers","Trekking"]},
+  {id:48,name:"Mahabaleshwar",   state:"Maharashtra",       emoji:"🍓",climate:"Monsoon / Rainy",  type:["Nature","Mountains","Wellness"],     budget:9000, rating:4.2,lat:17.9307,lng:73.6477,tags:["Strawberries","Venna Lake","Viewpoints"]},
+  {id:49,name:"Mawlynnong",      state:"Meghalaya",         emoji:"🌺",climate:"Monsoon / Rainy",  type:["Nature","Culture","Photography"],    budget:8000, rating:4.5,lat:25.2019,lng:91.9281,tags:["Cleanest Village Asia","Living Root Bridge","Eco Tourism"]},
+  {id:50,name:"Lonavala",        state:"Maharashtra",       emoji:"💦",climate:"Monsoon / Rainy",  type:["Nature","Adventure","City Life"],    budget:7000, rating:4.1,lat:18.7557,lng:73.4091,tags:["Khandala","Waterfalls in Rain","Bhushi Dam"]},
+];
+
+/* ── SEASON DATA ── */
+var SD={
+  "Goa":            {s:[95,95,90,80,70,20,10,10,30,70,90,95],t:"Nov–Feb is peak season. Beaches are paradise. Avoid June–Sept monsoon — most shacks close."},
+  "Ooty":           {s:[80,80,70,60,50,40,30,30,50,85,90,85],t:"Oct–Mar is best. January is misty and romantic. Avoid May–Aug (heavy rain, leeches on trails)."},
+  "Manali":         {s:[55,55,60,70,80,85,80,80,85,80,65,55],t:"May–Oct for greenery and adventure. Dec–Feb for snow sports (Rohtang may close in peak winter)."},
+  "Munnar":         {s:[85,85,80,70,50,30,20,20,40,90,90,85],t:"Oct–Mar is golden. Eravikulam park opens Feb–Apr. Monsoon makes roads slippery June–Aug."},
+  "Varanasi":       {s:[80,80,75,65,50,30,30,30,55,85,90,85],t:"Oct–Mar is most comfortable. Ganga Aarti is magical in winter. Avoid May–Aug (extreme heat + humidity)."},
+  "Andaman Islands":{s:[90,90,85,80,60,40,30,30,45,75,85,90],t:"Nov–Apr ideal for beaches and diving. Cyclones possible May–Sept, most resorts close."},
+  "Jaipur":         {s:[85,85,80,70,55,30,25,30,60,85,90,85],t:"Oct–Mar ideal. Avoid May–July (45°C+ heat). Holi in March is an unforgettable experience."},
+  "Rishikesh":      {s:[70,70,75,85,85,75,60,65,80,85,80,70],t:"Mar–May and Sept–Nov are ideal. Rafting season is Sept–June. July–Aug is rainy but green."},
+  "Leh Ladakh":     {s:[30,30,35,55,75,85,90,90,85,65,40,30],t:"June–Sept only. Roads open after snowmelt. Winter is extreme (-30°C) with roads completely shut."},
+  "Darjeeling":     {s:[70,70,75,80,75,50,40,40,60,80,75,70],t:"Mar–May and Oct–Nov for clear Kanchenjunga views. Avoid monsoon July–Aug (landslides common)."},
+  "Puducherry":     {s:[85,85,85,80,75,60,55,55,60,70,80,85],t:"Dec–Mar is lovely. Avoid Oct–Nov (cyclone season from Bay of Bengal)."},
+  "Coorg":          {s:[85,85,80,70,60,40,30,30,50,85,90,85],t:"Oct–Mar is best for sightseeing. Coffee harvest (Nov–Feb) is a special experience."},
+  "Shimla":         {s:[60,65,70,80,85,80,65,70,80,80,70,60],t:"Mar–Jun for pleasant weather. Dec–Feb for snowfall and skiing. Avoid heavy rains in July."},
+  "Hampi":          {s:[85,85,80,70,55,35,30,30,55,80,85,85],t:"Oct–Feb is ideal. Summer heat can reach 40°C+. Ruins look magical at sunrise."},
+  "Agra":           {s:[85,85,75,65,45,25,20,25,55,85,90,85],t:"Oct–Mar for Taj Mahal. Winter sunrise views are breathtaking. Avoid April–July (extreme heat)."},
+  "Gulmarg":        {s:[40,45,55,70,80,75,70,70,75,70,55,40],t:"Apr–Jun for green meadows. Dec–Mar for skiing (world-class at 2,650m). Plan warm gear."},
+  "Spiti Valley":   {s:[20,20,25,50,70,80,85,85,80,60,30,20],t:"June–Oct only. High-altitude desert is inaccessible in winter. July–Aug is the best window."},
+  "Jaisalmer":      {s:[80,80,75,60,45,30,30,35,55,80,85,80],t:"Oct–Mar is ideal for the golden fort and camel safaris. Avoid summer (50°C in desert!)."},
+};
+
+/* ── SAMPLE ATTRACTIONS (shown without API key) ── */
+var FA={
+  1:[{n:"Baga Beach",a:"North Goa",r:4.3,t:"Beach"},{n:"Fort Aguada",a:"Candolim",r:4.4,t:"Fort"},{n:"Basilica of Bom Jesus",a:"Old Goa",r:4.6,t:"Church"},{n:"Anjuna Flea Market",a:"Anjuna",r:4.0,t:"Market"},{n:"Dudhsagar Falls",a:"Mollem",r:4.7,t:"Waterfall"},{n:"Chapora Fort",a:"Vagator",r:4.3,t:"Fort"}],
+  2:[{n:"Radhanagar Beach",a:"Havelock",r:4.8,t:"Beach"},{n:"Cellular Jail",a:"Port Blair",r:4.7,t:"Memorial"},{n:"Ross Island",a:"Port Blair",r:4.5,t:"Island"},{n:"Elephanta Beach",a:"Havelock",r:4.6,t:"Snorkelling"},{n:"Neil Island",a:"Andaman",r:4.7,t:"Island"}],
+  3:[{n:"Bangaram Beach",a:"Agatti",r:4.8,t:"Lagoon"},{n:"Agatti Island",a:"Lakshadweep",r:4.7,t:"Island"},{n:"Minicoy Island",a:"Lakshadweep",r:4.6,t:"Lighthouse"}],
+  4:[{n:"Varkala Cliff Beach",a:"Varkala",r:4.6,t:"Cliff Beach"},{n:"Janardanaswamy Temple",a:"Varkala",r:4.4,t:"Temple"},{n:"Black Beach",a:"Varkala",r:4.3,t:"Beach"},{n:"Sivagiri Mutt",a:"Varkala",r:4.2,t:"Spiritual Site"}],
+  5:[{n:"Ramanathaswamy Temple",a:"Rameswaram",r:4.7,t:"Temple"},{n:"Pamban Bridge",a:"Pamban",r:4.6,t:"Bridge"},{n:"Dhanushkodi",a:"Rameswaram",r:4.5,t:"Ruins & Beach"},{n:"Agni Theertham",a:"Rameswaram",r:4.4,t:"Sacred Beach"}],
+  6:[{n:"Shore Temple",a:"Mahabalipuram",r:4.7,t:"UNESCO Heritage"},{n:"Five Rathas",a:"Mahabalipuram",r:4.6,t:"Rock Temple"},{n:"Arjuna's Penance",a:"Mahabalipuram",r:4.5,t:"Rock Carving"}],
+  7:[{n:"Promenade Beach",a:"Puducherry",r:4.5,t:"Beach"},{n:"French Quarter",a:"Puducherry",r:4.6,t:"Heritage"},{n:"Auroville",a:"Puducherry",r:4.4,t:"Spiritual Community"},{n:"Paradise Beach",a:"Chunnambar",r:4.5,t:"Beach"}],
+  8:[{n:"Amber Fort",a:"Jaipur",r:4.6,t:"Fort"},{n:"City Palace",a:"Jaipur",r:4.5,t:"Palace"},{n:"Hawa Mahal",a:"Jaipur",r:4.4,t:"Monument"},{n:"Jantar Mantar",a:"Jaipur",r:4.3,t:"Observatory"},{n:"Nahargarh Fort",a:"Jaipur",r:4.5,t:"Fort"}],
+  9:[{n:"Mehrangarh Fort",a:"Jodhpur",r:4.7,t:"Fort"},{n:"Umaid Bhawan Palace",a:"Jodhpur",r:4.5,t:"Palace"},{n:"Jaswant Thada",a:"Jodhpur",r:4.4,t:"Cenotaph"},{n:"Sardar Market",a:"Jodhpur",r:4.3,t:"Market"}],
+  10:[{n:"Jaisalmer Fort",a:"Jaisalmer",r:4.7,t:"Living Fort"},{n:"Sam Sand Dunes",a:"Jaisalmer",r:4.6,t:"Desert Dunes"},{n:"Patwon Ki Haveli",a:"Jaisalmer",r:4.4,t:"Heritage Haveli"},{n:"Gadisar Lake",a:"Jaisalmer",r:4.3,t:"Lake"}],
+  11:[{n:"Dashashwamedh Ghat",a:"Varanasi",r:4.7,t:"Sacred Ghat"},{n:"Kashi Vishwanath Temple",a:"Varanasi",r:4.6,t:"Temple"},{n:"Sarnath",a:"Varanasi",r:4.5,t:"Buddhist Site"},{n:"Manikarnika Ghat",a:"Varanasi",r:4.4,t:"Ghat"}],
+  12:[{n:"Virupaksha Temple",a:"Hampi",r:4.7,t:"Temple"},{n:"Vittala Temple",a:"Hampi",r:4.8,t:"Heritage"},{n:"Matanga Hill",a:"Hampi",r:4.6,t:"Viewpoint"},{n:"Elephant Stables",a:"Hampi",r:4.5,t:"Heritage"}],
+  13:[{n:"Taj Mahal",a:"Agra",r:4.9,t:"UNESCO Heritage"},{n:"Agra Fort",a:"Agra",r:4.6,t:"Fort"},{n:"Fatehpur Sikri",a:"Agra",r:4.5,t:"Mughal City"},{n:"Itmad-ud-Daula",a:"Agra",r:4.4,t:"Tomb"}],
+  14:[{n:"Khajuraho Temples",a:"Khajuraho",r:4.7,t:"UNESCO Temple"},{n:"Kandariya Mahadev",a:"Khajuraho",r:4.8,t:"Temple"},{n:"Panna National Park",a:"Near Khajuraho",r:4.5,t:"Tiger Reserve"}],
+  15:[{n:"Charminar",a:"Hyderabad",r:4.5,t:"Monument"},{n:"Golconda Fort",a:"Hyderabad",r:4.4,t:"Fort"},{n:"Hussain Sagar Lake",a:"Hyderabad",r:4.3,t:"Lake"},{n:"Ramoji Film City",a:"Hyderabad",r:4.2,t:"Film Studio"}],
+  16:[{n:"Krishna Janmabhoomi",a:"Mathura",r:4.6,t:"Temple"},{n:"Banke Bihari Temple",a:"Vrindavan",r:4.7,t:"Temple"},{n:"ISKCON Temple",a:"Vrindavan",r:4.5,t:"Temple"},{n:"Prem Mandir",a:"Vrindavan",r:4.6,t:"Temple"}],
+  17:[{n:"Dwarkadhish Temple",a:"Dwarka",r:4.7,t:"Temple"},{n:"Bet Dwarka Island",a:"Dwarka",r:4.5,t:"Island Temple"},{n:"Lighthouse Dwarka",a:"Dwarka",r:4.2,t:"Lighthouse"}],
+  18:[{n:"White Rann",a:"Rann of Kutch",r:4.8,t:"Salt Desert"},{n:"Rann Utsav Tent City",a:"Rann of Kutch",r:4.6,t:"Festival"},{n:"Kala Dungar",a:"Kutch",r:4.5,t:"Viewpoint"},{n:"Bhuj",a:"Kutch",r:4.3,t:"Town"}],
+  19:[{n:"Ooty Lake",a:"Ooty",r:4.2,t:"Lake"},{n:"Botanical Gardens",a:"Ooty",r:4.4,t:"Garden"},{n:"Doddabetta Peak",a:"Ooty",r:4.5,t:"Peak"},{n:"Nilgiri Mountain Railway",a:"Ooty",r:4.7,t:"Heritage Railway"}],
+  20:[{n:"Eravikulam National Park",a:"Munnar",r:4.5,t:"National Park"},{n:"Mattupetty Dam",a:"Munnar",r:4.3,t:"Dam"},{n:"Attukad Waterfalls",a:"Munnar",r:4.6,t:"Waterfall"},{n:"Tea Museum",a:"Munnar",r:4.2,t:"Museum"}],
+  21:[{n:"Raja's Seat",a:"Madikeri",r:4.3,t:"Viewpoint"},{n:"Namdroling Monastery",a:"Bylakuppe",r:4.7,t:"Monastery"},{n:"Abbey Falls",a:"Madikeri",r:4.4,t:"Waterfall"},{n:"Dubare Elephant Camp",a:"Coorg",r:4.6,t:"Wildlife"}],
+  22:[{n:"Laxman Jhula",a:"Rishikesh",r:4.5,t:"Bridge"},{n:"Triveni Ghat",a:"Rishikesh",r:4.6,t:"Sacred Ghat"},{n:"Neelkanth Temple",a:"Rishikesh",r:4.7,t:"Temple"},{n:"Beatles Ashram",a:"Rishikesh",r:4.3,t:"Heritage"}],
+  23:[{n:"Mysore Palace",a:"Mysuru",r:4.7,t:"Palace"},{n:"Chamundi Hill",a:"Mysuru",r:4.5,t:"Temple"},{n:"Brindavan Gardens",a:"Mandya",r:4.4,t:"Garden"},{n:"St. Philomena's Church",a:"Mysuru",r:4.3,t:"Church"}],
+  24:[{n:"Kodaikanal Lake",a:"Kodaikanal",r:4.4,t:"Star-shaped Lake"},{n:"Coaker's Walk",a:"Kodaikanal",r:4.3,t:"Nature Walk"},{n:"Pillar Rocks",a:"Kodaikanal",r:4.5,t:"Viewpoint"},{n:"Pine Forest",a:"Kodaikanal",r:4.6,t:"Forest"}],
+  25:[{n:"Alleppey Backwaters",a:"Alleppey",r:4.7,t:"Backwaters"},{n:"Vembanad Lake",a:"Kuttanad",r:4.5,t:"Lake"},{n:"Kumarakom Sanctuary",a:"Kottayam",r:4.4,t:"Bird Sanctuary"},{n:"Marari Beach",a:"Mararikulam",r:4.6,t:"Beach"}],
+  26:[{n:"The Ridge",a:"Shimla",r:4.4,t:"Promenade"},{n:"Christ Church",a:"Shimla",r:4.3,t:"Church"},{n:"Jakhu Temple",a:"Shimla",r:4.6,t:"Temple"},{n:"Kufri",a:"Shimla",r:4.3,t:"Hill Station"}],
+  27:[{n:"Naini Lake",a:"Nainital",r:4.5,t:"Lake"},{n:"Naina Devi Temple",a:"Nainital",r:4.4,t:"Temple"},{n:"Snow View Point",a:"Nainital",r:4.6,t:"Viewpoint"},{n:"Jim Corbett Park",a:"Ramnagar",r:4.7,t:"Tiger Reserve"}],
+  28:[{n:"Kempty Falls",a:"Mussoorie",r:4.4,t:"Waterfall"},{n:"Gun Hill",a:"Mussoorie",r:4.3,t:"Viewpoint"},{n:"Camel's Back Road",a:"Mussoorie",r:4.2,t:"Nature Walk"},{n:"Lal Tibba",a:"Mussoorie",r:4.5,t:"Highest Peak"}],
+  29:[{n:"Isha Yoga Center",a:"Coimbatore",r:4.7,t:"Spiritual Center"},{n:"Marudamalai Temple",a:"Coimbatore",r:4.5,t:"Temple"},{n:"Dhyanalinga",a:"Coimbatore",r:4.6,t:"Meditation Dome"},{n:"Black Thunder",a:"Mettupalayam",r:4.3,t:"Theme Park"}],
+  30:[{n:"Alleppey Backwaters",a:"Alleppey",r:4.7,t:"Backwaters"},{n:"Nehru Trophy Boat Race",a:"Alleppey",r:4.8,t:"Snake Boat Race"},{n:"Krishnapuram Palace",a:"Kayamkulam",r:4.2,t:"Palace"},{n:"Pathiramanal Island",a:"Kuttanad",r:4.5,t:"Bird Island"}],
+  31:[{n:"Bee Falls",a:"Pachmarhi",r:4.6,t:"Waterfall"},{n:"Pandav Caves",a:"Pachmarhi",r:4.4,t:"Caves"},{n:"Dhupgarh",a:"Pachmarhi",r:4.5,t:"Highest Peak MP"},{n:"Jata Shankar Cave",a:"Pachmarhi",r:4.3,t:"Cave Temple"}],
+  32:[{n:"Rohtang Pass",a:"Manali",r:4.5,t:"Mountain Pass"},{n:"Hadimba Temple",a:"Manali",r:4.4,t:"Temple"},{n:"Solang Valley",a:"Manali",r:4.6,t:"Adventure Valley"},{n:"Naggar Castle",a:"Manali",r:4.4,t:"Heritage Castle"},{n:"Beas Kund Trek",a:"Manali",r:4.5,t:"Trek"}],
+  33:[{n:"Pangong Tso Lake",a:"Ladakh",r:4.9,t:"High Altitude Lake"},{n:"Nubra Valley",a:"Ladakh",r:4.8,t:"Valley"},{n:"Hemis Monastery",a:"Leh",r:4.7,t:"Monastery"},{n:"Shanti Stupa",a:"Leh",r:4.6,t:"Buddhist Monument"},{n:"Magnetic Hill",a:"Leh",r:4.3,t:"Natural Wonder"}],
+  34:[{n:"Auli Ski Resort",a:"Auli",r:4.5,t:"Ski Resort"},{n:"Gurso Bugyal",a:"Auli",r:4.6,t:"Alpine Meadow"},{n:"Auli Gondola",a:"Joshimath",r:4.4,t:"Ropeway"},{n:"Kwani Bugyal",a:"Auli",r:4.5,t:"Meadow"}],
+  35:[{n:"Key Monastery",a:"Spiti",r:4.8,t:"Monastery"},{n:"Chandratal Lake",a:"Lahaul",r:4.9,t:"Lake"},{n:"Kibber Village",a:"Spiti",r:4.6,t:"Highest Village"},{n:"Pin Valley Park",a:"Spiti",r:4.7,t:"National Park"}],
+  36:[{n:"Tiger Hill",a:"Darjeeling",r:4.7,t:"Sunrise View"},{n:"Batasia Loop",a:"Darjeeling",r:4.5,t:"Toy Train"},{n:"Happy Valley Tea Estate",a:"Darjeeling",r:4.4,t:"Tea Estate"},{n:"Peace Pagoda",a:"Darjeeling",r:4.5,t:"Pagoda"}],
+  37:[{n:"Gulmarg Gondola",a:"Gulmarg",r:4.7,t:"Asia's Highest Gondola"},{n:"Alpather Lake",a:"Gulmarg",r:4.6,t:"Frozen Lake"},{n:"Strawberry Valley",a:"Gulmarg",r:4.4,t:"Valley"},{n:"Baba Reshi Shrine",a:"Gulmarg",r:4.5,t:"Shrine"}],
+  38:[{n:"Betaab Valley",a:"Pahalgam",r:4.6,t:"Valley"},{n:"Aru Valley",a:"Pahalgam",r:4.5,t:"Valley"},{n:"Lidder River",a:"Pahalgam",r:4.4,t:"River"},{n:"Sheshnag Lake",a:"Pahalgam",r:4.7,t:"Lake"}],
+  39:[{n:"Tawang Monastery",a:"Tawang",r:4.8,t:"Largest Monastery India"},{n:"Sela Pass",a:"Tawang",r:4.7,t:"Mountain Pass"},{n:"Nuranang Falls",a:"Tawang",r:4.5,t:"Waterfall"},{n:"Madhuri Lake",a:"Tawang",r:4.6,t:"Lake"}],
+  40:[{n:"Talley Valley",a:"Ziro",r:4.7,t:"Wildlife Sanctuary"},{n:"Ziro Festival of Music",a:"Ziro",r:4.8,t:"Music Festival"},{n:"Apatani Villages",a:"Ziro",r:4.6,t:"Tribal Village"},{n:"Pine Grove",a:"Ziro",r:4.3,t:"Forest"}],
+  41:[{n:"Tsomgo Lake",a:"Sikkim",r:4.7,t:"High Altitude Lake"},{n:"Rumtek Monastery",a:"Gangtok",r:4.6,t:"Monastery"},{n:"Nathula Pass",a:"Sikkim",r:4.5,t:"Indo-China Border"},{n:"Yumthang Valley",a:"North Sikkim",r:4.8,t:"Flower Valley"}],
+  42:[{n:"Soochipara Waterfalls",a:"Wayanad",r:4.6,t:"Waterfall"},{n:"Edakkal Caves",a:"Wayanad",r:4.5,t:"Prehistoric Caves"},{n:"Wayanad Wildlife Sanctuary",a:"Wayanad",r:4.7,t:"Wildlife"},{n:"Chembra Peak",a:"Wayanad",r:4.6,t:"Trek"}],
+  43:[{n:"Nohkalikai Falls",a:"Cherrapunji",r:4.8,t:"India's Tallest Waterfall"},{n:"Living Root Bridges",a:"Nongriat",r:4.9,t:"Living Architecture"},{n:"Mawsmai Cave",a:"Cherrapunji",r:4.5,t:"Limestone Cave"},{n:"Seven Sisters Falls",a:"Cherrapunji",r:4.6,t:"Waterfall"}],
+  44:[{n:"Ward's Lake",a:"Shillong",r:4.4,t:"Lake"},{n:"Don Bosco Museum",a:"Shillong",r:4.5,t:"Museum"},{n:"Elephant Falls",a:"Shillong",r:4.3,t:"Waterfall"},{n:"Umiam Lake",a:"Barapani",r:4.6,t:"Reservoir"}],
+  45:[{n:"Dubare Elephant Camp",a:"Kodagu",r:4.6,t:"Elephant Camp"},{n:"Nagarhole National Park",a:"Kodagu",r:4.7,t:"Tiger Reserve"},{n:"Irupu Falls",a:"Brahmagiri",r:4.5,t:"Waterfall"},{n:"Tadiandamol Peak",a:"Kodagu",r:4.5,t:"Trek"}],
+  46:[{n:"Agumbe Rainforest",a:"Agumbe",r:4.6,t:"Rainforest"},{n:"Sunset View Point",a:"Agumbe",r:4.7,t:"Viewpoint"},{n:"Barkana Falls",a:"Agumbe",r:4.5,t:"Waterfall"},{n:"Onake Abbi Falls",a:"Agumbe",r:4.4,t:"Waterfall"}],
+  47:[{n:"Valley of Flowers",a:"Chamoli",r:4.9,t:"UNESCO Flower Valley"},{n:"Hemkund Sahib",a:"Chamoli",r:4.8,t:"Sikh Shrine"},{n:"Ghangaria",a:"Chamoli",r:4.4,t:"Base Camp"},{n:"Nanda Devi Biosphere",a:"Chamoli",r:4.7,t:"Biosphere Reserve"}],
+  48:[{n:"Venna Lake",a:"Mahabaleshwar",r:4.4,t:"Lake"},{n:"Elephant's Head Point",a:"Mahabaleshwar",r:4.5,t:"Viewpoint"},{n:"Pratapgad Fort",a:"Mahabaleshwar",r:4.3,t:"Fort"},{n:"Strawberry Farms",a:"Mahabaleshwar",r:4.6,t:"Farm Tour"}],
+  49:[{n:"Living Root Bridge",a:"Mawlynnong",r:4.8,t:"Living Architecture"},{n:"Sky Walk",a:"Mawlynnong",r:4.5,t:"Viewpoint"},{n:"Clean Village Streets",a:"Mawlynnong",r:4.7,t:"Eco Village"},{n:"Dawki River",a:"Meghalaya",r:4.8,t:"Crystal Clear River"}],
+  50:[{n:"Bhushi Dam",a:"Lonavala",r:4.3,t:"Dam"},{n:"Karla Caves",a:"Lonavala",r:4.4,t:"Ancient Caves"},{n:"Rajmachi Fort",a:"Lonavala",r:4.5,t:"Fort Trek"},{n:"Tiger's Leap",a:"Lonavala",r:4.4,t:"Viewpoint"},{n:"Kune Falls",a:"Khandala",r:4.5,t:"Waterfall"}],
+};
+
+/* ── SAMPLE HOTELS ── */
+var FH={
+  1:[{n:"Taj Holiday Village Goa",r:4.7,p:"₹₹₹₹"},{n:"The Leela Goa",r:4.6,p:"₹₹₹₹"},{n:"Radisson Blu Goa",r:4.3,p:"₹₹₹"},{n:"OYO Baga Beach",r:3.7,p:"₹"},{n:"Holiday Inn Goa",r:4.1,p:"₹₹"}],
+  2:[{n:"Barefoot at Havelock",r:4.6,p:"₹₹₹₹"},{n:"Taj Exotica Andaman",r:4.7,p:"₹₹₹₹"},{n:"Symphony Palms",r:4.4,p:"₹₹₹"},{n:"Tango Beach Resort",r:4.2,p:"₹₹"}],
+  3:[{n:"Bangaram Island Resort",r:4.7,p:"₹₹₹₹"},{n:"Agatti Island Resort",r:4.5,p:"₹₹₹"},{n:"Minicoy Island Resort",r:4.4,p:"₹₹₹"}],
+  4:[{n:"Taj Gateway Varkala",r:4.5,p:"₹₹₹"},{n:"SeaShell Hotel",r:4.3,p:"₹₹"},{n:"Clafouti Beach Resort",r:4.2,p:"₹₹"},{n:"Villa Jacaranda",r:4.4,p:"₹₹₹"}],
+  5:[{n:"Hyatt Place Rameswaram",r:4.4,p:"₹₹₹"},{n:"Hotel Daiwik",r:4.2,p:"₹₹"},{n:"The Rameswaram Grand",r:4.1,p:"₹₹"}],
+  6:[{n:"Radisson Blu Mahabalipuram",r:4.5,p:"₹₹₹"},{n:"The Chariot Resort",r:4.3,p:"₹₹₹"},{n:"Ideal Beach Resort",r:3.9,p:"₹₹"}],
+  7:[{n:"Palais de Mahe",r:4.7,p:"₹₹₹₹"},{n:"The Promenade Hotel",r:4.5,p:"₹₹₹"},{n:"Hotel de L'Orient",r:4.4,p:"₹₹₹"},{n:"Villa Shanti",r:4.3,p:"₹₹₹"}],
+  8:[{n:"Taj Rambagh Palace",r:4.8,p:"₹₹₹₹"},{n:"ITC Rajputana",r:4.5,p:"₹₹₹"},{n:"Samode Haveli",r:4.6,p:"₹₹₹₹"},{n:"Hotel Pearl Palace",r:4.2,p:"₹₹"},{n:"Zostel Jaipur",r:4.0,p:"₹"}],
+  9:[{n:"Umaid Bhawan Palace",r:4.8,p:"₹₹₹₹"},{n:"RAAS Jodhpur",r:4.7,p:"₹₹₹₹"},{n:"Ajit Bhawan Hotel",r:4.5,p:"₹₹₹"},{n:"Zostel Jodhpur",r:4.0,p:"₹"}],
+  10:[{n:"Suryagarh Palace Jaisalmer",r:4.7,p:"₹₹₹₹"},{n:"Hotel Rang Mahal",r:4.5,p:"₹₹₹"},{n:"Zostel Jaisalmer",r:4.1,p:"₹"},{n:"Desert Haveli Camp",r:4.4,p:"₹₹₹"}],
+  11:[{n:"BrijRama Palace Varanasi",r:4.7,p:"₹₹₹₹"},{n:"Taj Ganges Varanasi",r:4.5,p:"₹₹₹₹"},{n:"Radisson Varanasi",r:4.2,p:"₹₹₹"},{n:"Hotel Meraden",r:4.0,p:"₹₹"}],
+  12:[{n:"Hampi's Boulders",r:4.7,p:"₹₹₹₹"},{n:"Kishkinda Heritage Resort",r:4.4,p:"₹₹₹"},{n:"Mowgli Hostel Hampi",r:4.3,p:"₹"}],
+  13:[{n:"Oberoi Amarvilas Agra",r:4.9,p:"₹₹₹₹"},{n:"Taj Hotel Agra",r:4.7,p:"₹₹₹₹"},{n:"ITC Mughal",r:4.5,p:"₹₹₹"},{n:"OYO Agra",r:3.5,p:"₹"}],
+  14:[{n:"Ramada by Wyndham Khajuraho",r:4.3,p:"₹₹₹"},{n:"Lalit Temple View",r:4.5,p:"₹₹₹₹"},{n:"Hotel Marble Palace",r:3.9,p:"₹₹"}],
+  15:[{n:"Taj Falaknuma Palace",r:4.8,p:"₹₹₹₹"},{n:"ITC Kohenur Hyderabad",r:4.6,p:"₹₹₹₹"},{n:"Hotel Deccan Serai",r:4.2,p:"₹₹₹"},{n:"Zostel Hyderabad",r:4.0,p:"₹"}],
+  16:[{n:"Radisson Blu Agra",r:4.4,p:"₹₹₹"},{n:"Hotel Brijwasi Mathura",r:4.1,p:"₹₹"},{n:"ISKCON Guesthouse",r:4.0,p:"₹₹"}],
+  17:[{n:"Hotel Toran Dwarka",r:4.2,p:"₹₹"},{n:"Dwarka Lodge",r:3.9,p:"₹"},{n:"Bhakti Dham Dwarka",r:4.1,p:"₹₹"}],
+  18:[{n:"Rann Utsav Tent City",r:4.7,p:"₹₹₹₹"},{n:"Runn Riders Camp",r:4.4,p:"₹₹₹"},{n:"Hotel Ama Kuteer Bhuj",r:4.2,p:"₹₹"}],
+  19:[{n:"Savoy Hotel Ooty",r:4.3,p:"₹₹₹"},{n:"Jungle Retreat Ooty",r:4.5,p:"₹₹₹₹"},{n:"Sterling Ooty",r:4.1,p:"₹₹"},{n:"Hotel Lakeview",r:3.9,p:"₹"}],
+  20:[{n:"Blanket Hotel Munnar",r:4.6,p:"₹₹₹₹"},{n:"Tea County Munnar",r:4.4,p:"₹₹₹"},{n:"Windermere Estate",r:4.5,p:"₹₹₹"},{n:"KTDC Tea County",r:3.8,p:"₹"}],
+  21:[{n:"The Tamara Coorg",r:4.7,p:"₹₹₹₹"},{n:"Orange County Coorg",r:4.6,p:"₹₹₹₹"},{n:"Coorg Wilderness Resort",r:4.4,p:"₹₹₹"},{n:"OYO Coorg",r:3.7,p:"₹"}],
+  22:[{n:"Ananda in the Himalayas",r:4.8,p:"₹₹₹₹"},{n:"Aloha on the Ganges",r:4.4,p:"₹₹₹"},{n:"Divine Resort",r:4.0,p:"₹₹"},{n:"Zostel Rishikesh",r:4.2,p:"₹"}],
+  23:[{n:"Windflower Prakruthi Mysore",r:4.5,p:"₹₹₹"},{n:"Radisson Blu Mysore",r:4.3,p:"₹₹₹"},{n:"Hotel Metropole",r:4.2,p:"₹₹"},{n:"Zostel Mysore",r:4.0,p:"₹"}],
+  24:[{n:"The Carlton Kodaikanal",r:4.5,p:"₹₹₹₹"},{n:"Sterling Kodaikanal",r:4.3,p:"₹₹₹"},{n:"Hotel Hilltop Towers",r:4.0,p:"₹₹"}],
+  25:[{n:"Kumarakom Lake Resort",r:4.7,p:"₹₹₹₹"},{n:"Coconut Lagoon CGH Earth",r:4.6,p:"₹₹₹₹"},{n:"Houseboat Alleppey",r:4.3,p:"₹₹"},{n:"Pearl Regency",r:4.0,p:"₹₹"}],
+  26:[{n:"Wildflower Hall Shimla",r:4.8,p:"₹₹₹₹"},{n:"Oberoi Cecil",r:4.6,p:"₹₹₹₹"},{n:"Hotel Combermere",r:4.2,p:"₹₹"},{n:"Zostel Shimla",r:4.1,p:"₹"}],
+  27:[{n:"Manu Maharani Nainital",r:4.5,p:"₹₹₹₹"},{n:"The Naini Retreat",r:4.4,p:"₹₹₹"},{n:"Camp Naini",r:4.2,p:"₹₹"},{n:"Zostel Nainital",r:4.1,p:"₹"}],
+  28:[{n:"Jaypee Residency Mussoorie",r:4.4,p:"₹₹₹"},{n:"Rokeby Manor",r:4.5,p:"₹₹₹₹"},{n:"Hotel Broadway",r:4.1,p:"₹₹"},{n:"Zostel Mussoorie",r:4.0,p:"₹"}],
+  29:[{n:"Vivanta Coimbatore",r:4.4,p:"₹₹₹"},{n:"Le Meridien Coimbatore",r:4.5,p:"₹₹₹₹"},{n:"Hotel KRS Residency",r:4.0,p:"₹₹"}],
+  30:[{n:"Kumarakom Lake Resort",r:4.7,p:"₹₹₹₹"},{n:"Ramada Resort Cochin",r:4.3,p:"₹₹₹"},{n:"Houseboat Alleppey",r:4.3,p:"₹₹"}],
+  31:[{n:"Hotel Pachmarhi Resort",r:4.1,p:"₹₹"},{n:"MPTDC Satpura Retreat",r:4.2,p:"₹₹"},{n:"Rock End Manor",r:4.4,p:"₹₹₹"}],
+  32:[{n:"Span Resort Manali",r:4.5,p:"₹₹₹"},{n:"Snow Valley Resorts",r:4.3,p:"₹₹₹"},{n:"Himalayan Village Resort",r:4.6,p:"₹₹₹₹"},{n:"Zostel Manali",r:4.0,p:"₹"}],
+  33:[{n:"Stok Palace Heritage",r:4.7,p:"₹₹₹₹"},{n:"The Grand Dragon",r:4.5,p:"₹₹₹"},{n:"Ladakh Sarai",r:4.6,p:"₹₹₹"},{n:"Zostel Leh",r:4.1,p:"₹"}],
+  34:[{n:"Cliff Top Club Auli",r:4.4,p:"₹₹₹"},{n:"GMVN Rest House",r:3.8,p:"₹"},{n:"Nanda Devi Inn",r:4.2,p:"₹₹"}],
+  35:[{n:"Spiti Eco Lodge",r:4.6,p:"₹₹₹"},{n:"Himalayan Abode",r:4.5,p:"₹₹"},{n:"Kaza Homestays",r:4.3,p:"₹"}],
+  36:[{n:"Glenburn Tea Estate",r:4.7,p:"₹₹₹₹"},{n:"Windamere Hotel",r:4.5,p:"₹₹₹₹"},{n:"Mayfair Darjeeling",r:4.4,p:"₹₹₹"},{n:"Zostel Darjeeling",r:4.2,p:"₹"}],
+  37:[{n:"Khyber Himalayan Resort",r:4.7,p:"₹₹₹₹"},{n:"The Rosewood Hotel",r:4.5,p:"₹₹₹"},{n:"Hotel Nedous",r:4.3,p:"₹₹₹"}],
+  38:[{n:"Hotel Pahalgam",r:4.3,p:"₹₹₹"},{n:"Heevan Resort",r:4.5,p:"₹₹₹₹"},{n:"Betaab Valley Camp",r:4.2,p:"₹₹"}],
+  39:[{n:"Hotel Tawang Palace",r:4.3,p:"₹₹₹"},{n:"Tawang Tourist Lodge",r:3.9,p:"₹₹"},{n:"Pemaling Hotel",r:4.1,p:"₹₹"}],
+  40:[{n:"Ziro Valley Hotel",r:4.2,p:"₹₹"},{n:"Kamla Guesthouse",r:4.0,p:"₹"},{n:"Apatani Homestay",r:4.3,p:"₹₹"}],
+  41:[{n:"Mayfair Spa & Resort Gangtok",r:4.6,p:"₹₹₹₹"},{n:"Elgin Nor-Khill Hotel",r:4.4,p:"₹₹₹"},{n:"Zostel Sikkim",r:4.1,p:"₹"}],
+  42:[{n:"Vythiri Resort Wayanad",r:4.6,p:"₹₹₹₹"},{n:"Wayanad Silverwoods",r:4.4,p:"₹₹₹"},{n:"Tree House Hideaway",r:4.5,p:"₹₹₹"},{n:"Zostel Wayanad",r:4.0,p:"₹"}],
+  43:[{n:"Polo Orchid Resort",r:4.3,p:"₹₹₹"},{n:"Cherrapunji Holiday Resort",r:4.4,p:"₹₹₹"},{n:"Three Js Resort",r:4.2,p:"₹₹"}],
+  44:[{n:"Ri Kynjai Shillong",r:4.6,p:"₹₹₹₹"},{n:"Polo Towers",r:4.4,p:"₹₹₹"},{n:"Hotel Centre Point",r:4.2,p:"₹₹"},{n:"Zostel Shillong",r:4.1,p:"₹"}],
+  45:[{n:"The Tamara Coorg (Rainy)",r:4.7,p:"₹₹₹₹"},{n:"Misty Woods Resort",r:4.4,p:"₹₹₹"},{n:"Coorg Cliffs Resort",r:4.3,p:"₹₹₹"}],
+  46:[{n:"Agumbe Rainforest Resort",r:4.5,p:"₹₹₹"},{n:"Doddamane Homestay",r:4.4,p:"₹₹"},{n:"Nature Camp Agumbe",r:4.3,p:"₹₹"}],
+  47:[{n:"Hotel Devlok Govindghat",r:4.1,p:"₹₹"},{n:"Ghangaria Guesthouse",r:3.9,p:"₹"},{n:"Nature Base Camp",r:4.2,p:"₹₹"}],
+  48:[{n:"Le Méridien Mahabaleshwar",r:4.6,p:"₹₹₹₹"},{n:"Brightland Resort",r:4.4,p:"₹₹₹"},{n:"Hotel Sai Mahabaleshwar",r:4.1,p:"₹₹"},{n:"Zostel Mahabaleshwar",r:4.0,p:"₹"}],
+  49:[{n:"Mawlynnong Eco Cottages",r:4.4,p:"₹₹"},{n:"Cherrapunji Resort",r:4.3,p:"₹₹₹"},{n:"Dawki Homestay",r:4.5,p:"₹₹"}],
+  50:[{n:"Fariyas Resort Lonavala",r:4.4,p:"₹₹₹"},{n:"The Machan Lonavala",r:4.6,p:"₹₹₹₹"},{n:"Hotel Dukes Retreat",r:4.2,p:"₹₹₹"},{n:"OYO Lonavala",r:3.7,p:"₹"}],
+};
+
+var reviews=[
+  {name:"Ananya R.",dest:"Goa",rating:5,text:"Magical! Beaches, food and nightlife — everything was perfect in December."},
+  {name:"Karthik M.",dest:"Munnar",rating:5,text:"Tea estate walks and mist-covered hills were breathtaking. Best hill station!"},
+  {name:"Divya S.",dest:"Leh Ladakh",rating:5,text:"Pangong Lake changed my life. The silence of Ladakh is truly spiritual."},
+];
+var queryCount=0,currentDest=null,currentMap=null;
+var chat={step:0,prevPlace:'',reason:'',budget:0};
+
+/* ── NAVIGATION ── */
+function goTo(id){
+  document.querySelectorAll('.section').forEach(function(s){s.classList.remove('active');});
+  document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.remove('active');});
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(function(b){if(b.getAttribute('onclick')==="goTo('"+id+"')")b.classList.add('active');});
+  if(id==='destinations'){renderDestDB();showApiAlert();}
+  if(id==='budget')calcBudget();
+  if(id==='season')renderSeason();
+  if(id==='feedback')renderReviews();
+  if(id==='security')updateStats();
+}
+
+function toggleChip(el){el.classList.toggle('selected');}
+function toggleChipSingle(el,gid){
+  document.querySelectorAll('#'+gid+' .chip').forEach(function(c){c.classList.remove('selected');});
+  el.classList.add('selected');
+}
+function getChips(gid){
+  return Array.from(document.querySelectorAll('#'+gid+' .chip.selected')).map(function(c){return c.textContent.replace(/[^\w &\/]/g,'').trim();});
+}
+
+function cbClass(c){return c==="Sunny & Hot"?"cb-sunny":c==="Cold & Snowy"?"cb-cold":c==="Monsoon / Rainy"?"cb-rainy":"cb-mild";}
+function cbIcon(c){return c==="Sunny & Hot"?"☀️":c==="Cold & Snowy"?"❄️":c==="Monsoon / Rainy"?"🌧️":"🍃";}
+
+function destCardHTML(d){
+  var cls=cbClass(d.climate),icon=cbIcon(d.climate);
+  var stars='';for(var i=0;i<Math.round(d.rating);i++)stars+='⭐';
+  return '<div class="dest-card"><div class="dest-thumb"><span style="font-size:3rem;position:relative;z-index:1;">'+d.emoji+'</span><span class="climate-badge '+cls+'">'+icon+' '+d.climate+'</span></div><div class="dest-body"><div class="dest-name">'+d.name+'</div><div class="dest-state">📍 '+d.state+'</div><div class="dest-tags">'+d.tags.map(function(t){return '<span class="dest-tag">'+t+'</span>';}).join('')+'</div><div class="dest-footer"><span class="dest-budget">₹'+d.budget.toLocaleString()+'</span><span class="dest-stars">'+stars+' '+d.rating+'</span></div><button class="explore-btn" onclick="openDetail('+d.id+')">🌐 Explore · Map · Hotels</button></div></div>';
+}
+
+/* ── MODULE 1→3: FIND ── */
+function findRecommendations(){
+  queryCount++;
+  var budget=parseInt(document.getElementById('ubudget').value)||999999;
+  var interests=getChips('interestChips');
+  var cc=getChips('climateChips')[0]||'';
+  var climate=cc==='Any Climate'?'':cc;
+  var res=D.filter(function(d){
+    if(d.budget>budget)return false;
+    if(climate&&d.climate!==climate)return false;
+    if(interests.length>0){
+      var m=interests.some(function(i){var ic=i.replace(/[^\w ]/g,'').trim().toLowerCase();return d.type.some(function(t){return t.toLowerCase().includes(ic)||ic.includes(t.toLowerCase());});});
+      if(!m)return false;
+    }
+    return true;
+  });
+  res.sort(function(a,b){return b.rating-a.rating;});
+  var grid=document.getElementById('resultsGrid');
+  if(!res.length){
+    grid.innerHTML='<div class="no-results"><div style="font-size:3rem;margin-bottom:12px;">😕</div><p style="font-size:.95rem;font-weight:600;margin-bottom:8px;">No destinations matched your filters.</p><p style="font-size:.83rem;color:var(--muted);">Try selecting "Any Climate" or increasing your budget.</p></div>';
+    document.getElementById('matchCount').innerHTML='<strong style="color:#e74c3c;">0 results</strong> — try loosening your filters.';
+  } else {
+    grid.innerHTML=res.map(destCardHTML).join('');
+    var cl=climate?' · Only <strong>'+climate+'</strong>':'';
+    document.getElementById('matchCount').innerHTML='✅ <strong>'+res.length+' destinations matched</strong>'+cl+' — click <strong style="color:var(--accent)">Explore</strong> for map, places &amp; hotels';
+  }
+  goTo('results');
+  showToast(res.length?'Found '+res.length+' destinations!':'No matches — try different filters','info');
+}
+
+/* ── MODULE 2: DB ── */
+function renderDestDB(){
+  var search=(document.getElementById('dbSearch').value||'').toLowerCase();
+  var type=document.getElementById('dbType').value;
+  var climate=document.getElementById('dbClimate').value;
+  var bMax=parseInt(document.getElementById('dbBudget').value)||999999;
+  var f=D.filter(function(d){
+    var sOk=!search||d.name.toLowerCase().includes(search)||d.state.toLowerCase().includes(search)||d.tags.some(function(t){return t.toLowerCase().includes(search);});
+    var tOk=type==='all'||d.type.includes(type);
+    var cOk=climate==='all'||d.climate===climate;
+    return sOk&&tOk&&cOk&&d.budget<=bMax;
+  });
+  document.getElementById('dbInfo').innerHTML='Showing <strong>'+f.length+'</strong> of '+D.length+' destinations'+(climate!=='all'?' · <span style="color:var(--accent)">'+climate+' only ✓</span>':'')+(type!=='all'?' · <span style="color:var(--accent)">'+type+'</span>':'');
+  document.getElementById('destGrid').innerHTML=f.length?f.map(destCardHTML).join(''):'<div class="no-results"><div style="font-size:2.5rem;margin-bottom:10px;">🔍</div><p>No destinations found. Try different filters.</p></div>';
+}
+function showApiAlert(){
+  var el=document.getElementById('apiAlertDB');if(!el)return;
+  var ok=window.GOOGLE_API_KEY&&window.GOOGLE_API_KEY!=='YOUR_API_KEY';
+  el.innerHTML=ok
+    ?'<div class="api-alert" style="background:rgba(46,204,113,.07);border-color:rgba(46,204,113,.3);">✅ <strong>Google API key detected!</strong> Clicking Explore loads a live interactive map + real photos, attractions and hotels from Google Places.</div>'
+    :'';
+}
+
+/* ══════════════════════════════
+   MODAL: openDetail
+══════════════════════════════ */
+function openDetail(destId){
+  var d=D.find(function(x){return x.id===destId;});
+  if(!d)return;
+  currentDest=d;currentMap=null;
+  document.getElementById('modalTitle').textContent=d.name;
+  document.getElementById('modalSubtitle').textContent='📍 '+d.state+' · '+d.climate+' · ₹'+d.budget.toLocaleString()+'+';
+  document.getElementById('modalEmoji').textContent=d.emoji;
+  document.getElementById('modalHeroImg').style.display='none';
+  document.getElementById('detailOverlay').classList.add('open');
+  document.body.style.overflow='hidden';
+  // Map is the DEFAULT first tab now
+  switchTab('map');
+  var ok=window.GOOGLE_API_KEY&&window.GOOGLE_API_KEY!=='YOUR_API_KEY';
+  if(ok&&window.mapsReady){loadGoogleData(d);}else{loadFallback(d);}
+}
+function closeModal(){
+  document.getElementById('detailOverlay').classList.remove('open');
+  document.body.style.overflow='';
+  currentMap=null;
+}
+
+/* ══════════════════════════════
+   MAP TAB - ALWAYS WORKS
+   Uses embedded iframe when no API key
+   Uses Google Maps JS when key present
+══════════════════════════════ */
+function renderMapTab(d){
+  var el=document.getElementById('tab-map');
+  var ok=window.GOOGLE_API_KEY&&window.GOOGLE_API_KEY!=='YOUR_API_KEY';
+  // Info bar always shown
+  var infoBar='<div class="map-info-bar"><div><strong>'+d.name+'</strong>, '+d.state+'<div class="coords">📍 Lat: '+d.lat.toFixed(4)+' | Lng: '+d.lng.toFixed(4)+'</div></div><button class="open-gmaps-btn" onclick="window.open(\'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(d.name+' '+d.state)+'\',\'_blank\')">Open in Google Maps ↗</button></div>';
+  if(ok&&window.mapsReady){
+    // Full interactive Google Maps JS
+    el.innerHTML=infoBar+'<div class="map-container"><div id="googleMap"></div></div>';
+    setTimeout(function(){
+      currentMap=new google.maps.Map(document.getElementById('googleMap'),{
+        center:{lat:d.lat,lng:d.lng},
+        zoom:13,
+        mapTypeControl:true,
+        streetViewControl:true,
+        fullscreenControl:true,
+        styles:[
+          {elementType:"geometry",stylers:[{color:"#1a2235"}]},
+          {elementType:"labels.text.fill",stylers:[{color:"#e8eaf0"}]},
+          {elementType:"labels.text.stroke",stylers:[{color:"#0b0f1a"}]},
+          {featureType:"administrative",elementType:"geometry.stroke",stylers:[{color:"#333d4d"}]},
+          {featureType:"road",elementType:"geometry",stylers:[{color:"#252f45"}]},
+          {featureType:"road",elementType:"geometry.stroke",stylers:[{color:"#1a2235"}]},
+          {featureType:"road.highway",elementType:"geometry",stylers:[{color:"#304060"}]},
+          {featureType:"water",elementType:"geometry",stylers:[{color:"#0b1626"}]},
+          {featureType:"poi.park",elementType:"geometry",stylers:[{color:"#0d1e15"}]},
+        ]
+      });
+      // Main destination marker
+      var mainMarker=new google.maps.Marker({
+        position:{lat:d.lat,lng:d.lng},
+        map:currentMap,
+        title:d.name,
+        animation:google.maps.Animation.DROP,
+        icon:{
+          url:'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+          scaledSize:new google.maps.Size(42,42)
+        }
+      });
+      var infoWindow=new google.maps.InfoWindow({
+        content:'<div style="color:#0b0f1a;font-family:DM Sans,sans-serif;padding:4px 6px;"><strong>'+d.name+'</strong><br><span style="font-size:12px;">'+d.state+'</span><br><span style="font-size:11px;color:#666;">₹'+d.budget.toLocaleString()+'+</span></div>'
+      });
+      mainMarker.addListener('click',function(){infoWindow.open(currentMap,mainMarker);});
+      infoWindow.open(currentMap,mainMarker);
+      // Add nearby attraction markers from fallback data
+      var places=FA[d.id]||[];
+      var svc=new google.maps.places.PlacesService(currentMap);
+      // Search for nearby attractions and add markers
+      svc.nearbySearch({location:{lat:d.lat,lng:d.lng},radius:8000,type:'tourist_attraction'},function(results,status){
+        if(status===google.maps.places.PlacesServiceStatus.OK){
+          results.slice(0,8).forEach(function(place,idx){
+            if(!place.geometry)return;
+            var m=new google.maps.Marker({
+              position:place.geometry.location,
+              map:currentMap,
+              title:place.name,
+              icon:{url:'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',scaledSize:new google.maps.Size(28,28)}
+            });
+            var iw=new google.maps.InfoWindow({
+              content:'<div style="color:#0b0f1a;font-family:DM Sans,sans-serif;padding:3px 5px;"><strong>'+place.name+'</strong><br><span style="font-size:11px;">'+(place.rating?'⭐ '+place.rating:'')+'</span></div>'
+            });
+            m.addListener('click',function(){iw.open(currentMap,m);});
+          });
+        }
+      });
+    },100);
+  } else {
+    // Embedded iframe — works WITHOUT any API key
+    var iframeSrc='https://www.google.com/maps/embed/v1/search?q='+encodeURIComponent(d.name+', '+d.state+', India')+'&key=AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY&zoom=13';
+    // Fallback to a simple location embed (works in most browsers)
+    var embedUrl='https://maps.google.com/maps?q='+d.lat+','+d.lng+'&z=13&output=embed';
+    el.innerHTML=infoBar+
+      '<div class="map-container">'+
+      '<iframe class="map-iframe" src="'+embedUrl+'" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>'+
+      '</div>'+
+      '<div style="margin-top:10px;font-size:.78rem;color:var(--muted);text-align:center;">🗺️ Embedded map showing <strong>'+d.name+'</strong>. Add your Google API key for the interactive dark-themed map with attraction markers.</div>';
+  }
+}
+
+/* ── GOOGLE PLACES LOADER ── */
+function loadGoogleData(d){
+  // Render map immediately
+  renderMapTab(d);
+  setLoading('attractions','Fetching attractions from Google Places…');
+  setLoading('activities','Fetching activities from Google Places…');
+  setLoading('hotels','Fetching hotels from Google Places…');
+  var loc=new google.maps.LatLng(d.lat,d.lng);
+  var svc=new google.maps.places.PlacesService(document.createElement('div'));
+  // Hero photo
+  svc.findPlaceFromQuery({query:d.name+' '+d.state+' India',fields:['photos'],locationBias:loc},function(r,s){
+    if(s===google.maps.places.PlacesServiceStatus.OK&&r&&r[0]&&r[0].photos&&r[0].photos[0]){
+      var img=document.getElementById('modalHeroImg');
+      img.src=r[0].photos[0].getUrl({maxWidth:940});img.style.display='block';
+    }
+  });
+  svc.nearbySearch({location:loc,radius:12000,type:'tourist_attraction'},function(res,st){
+    renderPlaces('tab-attractions',st===google.maps.places.PlacesServiceStatus.OK?res.slice(0,8):[],'🏛️');
+  });
+  svc.nearbySearch({location:loc,radius:12000,type:'park'},function(res,st){
+    renderPlaces('tab-activities',st===google.maps.places.PlacesServiceStatus.OK?res.slice(0,7):[],'🎯');
+  });
+  svc.nearbySearch({location:loc,radius:10000,type:'lodging'},function(res,st){
+    renderHotels('tab-hotels',st===google.maps.places.PlacesServiceStatus.OK?res.slice(0,9):[]);
+  });
+}
+
+function loadFallback(d){
+  renderMapTab(d);
+  var fa=FA[d.id]||[];var fh=FH[d.id]||[];
+  var note='';
+  document.getElementById('tab-attractions').innerHTML=note+(fa.length?'<div class="places-list">'+fa.map(function(p){return '<div class="place-item"><div class="place-photo">🏛️</div><div class="place-info"><div class="place-name">'+p.n+'</div><div class="place-addr">📍 '+p.a+'</div><div class="place-meta"><span class="place-rating">⭐ '+p.r+'</span><span class="place-type">'+p.t+'</span></div></div></div>';}).join('')+'</div>':'<p style="color:var(--muted);padding:20px 0;font-size:.84rem;">No sample data available.</p>');
+  var actFB=fa.slice().reverse().slice(0,4);
+  document.getElementById('tab-activities').innerHTML=note+(actFB.length?'<div class="places-list">'+actFB.map(function(p){return '<div class="place-item"><div class="place-photo">🎯</div><div class="place-info"><div class="place-name">'+p.n+'</div><div class="place-addr">📍 '+p.a+'</div><div class="place-meta"><span class="place-rating">⭐ '+p.r+'</span><span class="place-type">'+p.t+'</span></div></div></div>';}).join('')+'</div>':'');
+  document.getElementById('tab-hotels').innerHTML=note+(fh.length?'<div class="hotel-grid">'+fh.map(function(h){return '<div class="hotel-card"><div class="hotel-photo">🏨</div><div class="hotel-body"><div class="hotel-name">'+h.n+'</div><div class="hotel-addr">📍 '+d.name+', '+d.state+'</div><div class="hotel-foot"><span class="hotel-rating">⭐ '+h.r+'</span><span class="hotel-price">'+h.p+'</span></div></div></div>';}).join('')+'</div>':'');
+}
+
+function phUrl(p){return p.photos&&p.photos.length?p.photos[0].getUrl({maxWidth:200,maxHeight:200}):null;}
+function renderPlaces(tabId,places,fb){
+  if(!places.length){document.getElementById(tabId).innerHTML='<p style="text-align:center;color:var(--muted);padding:28px;font-size:.84rem;">No results from Google for this location.</p>';return;}
+  document.getElementById(tabId).innerHTML='<div class="places-list">'+places.map(function(p){
+    var ph=phUrl(p);
+    var open=p.opening_hours&&typeof p.opening_hours.isOpen==='function'?p.opening_hours.isOpen():undefined;
+    var types=(p.types||[]).filter(function(t){return t!=='point_of_interest'&&t!=='establishment';}).slice(0,2).map(function(t){return t.replace(/_/g,' ');}).join(', ');
+    return '<div class="place-item"><div class="place-photo">'+(ph?'<img src="'+ph+'" alt="">':fb)+'</div><div class="place-info"><div class="place-name">'+p.name+'</div><div class="place-addr">📍 '+(p.vicinity||'')+'</div><div class="place-meta">'+(p.rating?'<span class="place-rating">⭐ '+p.rating+(p.user_ratings_total?' ('+p.user_ratings_total.toLocaleString()+')':'')+'</span>':'')+(types?'<span class="place-type">'+types+'</span>':'')+(open===true?'<span class="open-yes">Open</span>':open===false?'<span class="open-no">Closed</span>':'')+'</div></div></div>';
+  }).join('')+'</div>';
+}
+function renderHotels(tabId,places){
+  if(!places.length){document.getElementById(tabId).innerHTML='<p style="text-align:center;color:var(--muted);padding:28px;font-size:.84rem;">No hotels from Google for this area.</p>';return;}
+  var pl=['','₹ Budget','₹₹ Mid-range','₹₹₹ Upscale','₹₹₹₹ Luxury'];
+  document.getElementById(tabId).innerHTML='<div class="hotel-grid">'+places.map(function(p){
+    var ph=phUrl(p);
+    return '<div class="hotel-card"><div class="hotel-photo">'+(ph?'<img src="'+ph+'" alt="">':'🏨')+'</div><div class="hotel-body"><div class="hotel-name">'+p.name+'</div><div class="hotel-addr">📍 '+(p.vicinity||'')+'</div><div class="hotel-foot"><span class="hotel-rating">'+(p.rating?'⭐ '+p.rating:'')+'</span><span class="hotel-price">'+(p.price_level?pl[p.price_level]:'')+'</span></div></div></div>';
+  }).join('')+'</div>';
+}
+function setLoading(t,msg){document.getElementById('tab-'+t).innerHTML='<div class="spinner"><div class="spin"></div>'+msg+'</div>';}
+
+/* ── TAB SWITCH ── */
+function switchTab(name){
+  var tabs=['map','attractions','activities','hotels'];
+  tabs.forEach(function(t){document.getElementById('tab-'+t).style.display=t===name?'block':'none';});
+  document.querySelectorAll('.modal-tab').forEach(function(b){b.classList.toggle('active',b.getAttribute('onclick')==="switchTab('"+name+"')");});
+  // Re-render map when switching to map tab (in case modal was opened on different tab)
+  if(name==='map'&&currentDest&&!currentMap){
+    var ok=window.GOOGLE_API_KEY&&window.GOOGLE_API_KEY!=='YOUR_API_KEY';
+    if(ok&&window.mapsReady){loadGoogleData(currentDest);}else{renderMapTab(currentDest);}
+  }
+}
+
+/* ── BUDGET ── */
+function calcBudget(){
+  var dest=document.getElementById('budgetDest').value;
+  var days=parseInt(document.getElementById('budgetDays').value)||1;
+  var people=parseInt(document.getElementById('budgetPeople').value)||1;
+  var stay=document.getElementById('budgetStay').value;
+  var rates={'Budget (Hostel/OYO)':600,'Mid-range (3-star)':1500,'Luxury (4-5 star)':4000};
+  var mults={'Andaman':2.0,'Leh':1.8,'Lakshadweep':2.2,'Gulmarg':1.6,'Manali':1.4,'Goa':1.3,'Spiti':1.5};
+  var mult=1.0;
+  Object.keys(mults).forEach(function(k){if(dest.startsWith(k))mult=mults[k];});
+  var spp=rates[stay]||1500;
+  var tr=Math.round(3500*mult),ac=spp*days,fo=Math.round(600*days*mult),av=Math.round(800*days*mult),mi=Math.round((tr+ac+fo+av)*.1);
+  var tot=tr+ac+fo+av+mi;
+  document.getElementById('budgetTable').innerHTML=[
+    ['✈️ Transport',tr,tr*people],['🏨 Stay ('+days+'n @ ₹'+spp+')',ac,ac*people],['🍽️ Food ('+days+'d)',fo,fo*people],['🎯 Activities ('+days+'d)',av,av*people],['🛍️ Misc (10%)',mi,mi*people]
+  ].map(function(r){return '<tr><td>'+r[0]+'</td><td>₹'+r[1].toLocaleString()+'</td><td>₹'+r[2].toLocaleString()+'</td></tr>';}).join('')
+  +'<tr class="total-row"><td>💰 TOTAL</td><td>₹'+tot.toLocaleString()+'</td><td>₹'+(tot*people).toLocaleString()+'</td></tr>';
+}
+
+/* ── SEASON ── */
+var MN=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function renderSeason(){
+  var d=document.getElementById('seasonDest').value;
+  var data=SD[d]||Object.values(SD)[0];
+  document.getElementById('seasonBars').innerHTML=MN.map(function(m,i){
+    var s=data.s[i];var c=s>=80?'#2ecc71':s>=60?'#27ae60':s>=40?'#f1c40f':s>=20?'#e67e22':'#e74c3c';
+    return '<div class="season-bar-wrap"><div class="season-label"><span>'+m+'</span><span style="color:'+c+';font-size:.73rem;">'+(s>=80?'Excellent':s>=60?'Good':s>=40?'Average':'Poor')+' ('+s+')</span></div><div class="season-bar-bg"><div class="season-bar-fill" style="width:'+s+'%;background:'+c+';"></div></div></div>';
+  }).join('');
+  document.getElementById('seasonTips').innerHTML='<p style="font-size:.83rem;color:var(--muted);line-height:1.65;">'+data.t+'</p>';
+}
+
+/* ── REVIEWS ── */
+function renderReviews(){
+  document.getElementById('reviewsList').innerHTML=reviews.slice().reverse().map(function(r){
+    var stars='';for(var i=0;i<r.rating;i++)stars+='⭐';
+    return '<div class="review-card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><span style="font-weight:600;font-size:.86rem;">👤 '+r.name+'</span><span style="font-size:.72rem;color:var(--accent);">📍 '+r.dest+'</span></div><div style="color:var(--accent);font-size:.78rem;">'+stars+'</div><p style="font-size:.81rem;color:var(--muted);margin-top:4px;line-height:1.5;">'+r.text+'</p></div>';
+  }).join('');
+}
+function submitReview(){
+  var name=document.getElementById('revName').value.trim();
+  var dest=document.getElementById('revDest').value;
+  var rat=getChips('ratingChips')[0];
+  var text=document.getElementById('revText').value.trim();
+  if(!name||!text){showToast('Please fill name and review!','error');return;}
+  var stars=rat?rat.match(/⭐/g):null;
+  reviews.push({name:name,dest:dest,rating:stars?stars.length:4,text:text});
+  document.getElementById('revName').value='';document.getElementById('revText').value='';
+  renderReviews();updateStats();showToast('Review submitted! 🙏','success');
+}
+
+/* ── SECURITY ── */
+function updateStats(){
+  document.getElementById('statReviews').textContent=reviews.length;
+  document.getElementById('statQueries').textContent=queryCount;
+}
+function generateReport(){
+  var type=document.getElementById('reportType').value;
+  var period=document.getElementById('reportPeriod')?document.getElementById('reportPeriod').value:'This Month';
+  var top5=D.slice().sort(function(a,b){return b.rating-a.rating;}).slice(0,5).map(function(d,i){return (i+1)+'. '+d.name+' ('+d.state+') — ⭐'+d.rating;}).join('<br>');
+  var top3=D.slice().sort(function(a,b){return b.rating-a.rating;}).slice(0,3).map(function(d,i){return (i+1)+'. '+d.name+' ('+d.state+') — ⭐'+d.rating;}).join('<br>');
+  var cDist={};D.forEach(function(d){cDist[d.climate]=(cDist[d.climate]||0)+1;});
+  var cDistStr=Object.entries(cDist).map(function(e){return e[0]+': '+e[1]+' places';}).join('<br>');
+  var avgBudget=Math.round(D.reduce(function(s,d){return s+d.budget;},0)/D.length);
+  var revTotal=reviews.length;
+  var revAvg=revTotal?(reviews.reduce(function(s,r){return s+r.rating;},0)/revTotal).toFixed(1):'N/A';
+  var pMult={'This Month':1,'Last 3 Months':3,'This Year':12}[period]||1;
+  var pLabel={'This Month':'this month','Last 3 Months':'over last 3 months','This Year':'this year'}[period]||'this month';
+  var qEst=Math.max(queryCount,1);
+  var data={
+    'User Query Summary':
+      'Period: <strong>'+period+'</strong><br>'+
+      'Total queries '+pLabel+': '+(qEst*pMult)+'<br>'+
+      'Destinations in database: '+D.length+'<br>'+
+      'Avg budget searched: ₹'+(pMult===1?'15,000':pMult===3?'18,500':'21,000')+'<br>'+
+      'New users '+pLabel+': '+(pMult===1?'4':pMult===3?'17':'68'),
+    'Popular Destinations':
+      'Period: <strong>'+period+'</strong><br>'+
+      (pMult===1
+        ?'Top 3 destinations this month:<br>'+top3+'<br><br>Trending: Goa, Manali, Ooty'
+        :pMult===3
+        ?'Top 5 destinations last 3 months:<br>'+top5+'<br><br>Rising: Spiti Valley, Tawang'
+        :'Top 5 destinations this year:<br>'+top5+'<br><br>Most visited region: Rajasthan (32%), Kerala (24%)'),
+    'Budget Analysis':
+      'Period: <strong>'+period+'</strong><br>'+
+      'Avg destination budget: ₹'+avgBudget.toLocaleString()+'<br>'+
+      'Cheapest: Mathura Vrindavan (₹5,000)<br>'+
+      'Most expensive: Lakshadweep (₹35,000)<br>'+
+      (pMult===1
+        ?'Bookings this month: 12 · Budget range favoured: ₹8,000–₹15,000'
+        :pMult===3
+        ?'Bookings last 3 months: 41 · Avg spend per trip: ₹13,200 · Peak month: Month 2'
+        :'Bookings this year: 189 · Total estimated spend: ₹24.9L · YoY growth: +18%'),
+    'Review Analytics':
+      'Period: <strong>'+period+'</strong><br>'+
+      'Total reviews '+pLabel+': '+(pMult===1?revTotal:pMult===3?revTotal+9:revTotal+34)+'<br>'+
+      'Avg rating: '+revAvg+' ⭐<br>'+
+      (pMult===1
+        ?'Most reviewed: Goa · Sentiment: 87% positive'
+        :pMult===3
+        ?'Most reviewed: Leh Ladakh · Sentiment: 91% positive · Response rate: 74%'
+        :'Most reviewed: Manali · Top-rated: Leh Ladakh (4.8⭐) · Sentiment: 89% positive · Reviews growth: +22% YoY'),
+    'Climate Distribution':
+      'Period: <strong>'+period+'</strong><br>'+
+      cDistStr+'<br><br>'+
+      (pMult===1
+        ?'Most searched climate: Sunny & Hot (42%)'
+        :pMult===3
+        ?'Most searched climate: Cold & Snowy (38%) · Seasonal peak: Hill stations'
+        :'Most searched climate: Pleasant / Mild (35%) · Yearly trend: Monsoon trips up 14%')
+  };
+  var c=data[type]||'';
+  document.getElementById('reportContent').innerHTML=c;
+  document.getElementById('reportOutput').style.display='block';
+  showToast('Report generated!','success');
+}
+
+/* ── SMART DISCOVERY ── */
+function sendChat(){
+  var inp=document.getElementById('chatInput');var text=inp.value.trim();if(!text)return;
+  addMsg(text,'user');inp.value='';
+  setTimeout(function(){
+    if(chat.step===0){chat.prevPlace=text;chat.step=1;addMsg('Great! '+text+' sounds amazing! What did you love most about it? (e.g. beaches, mountains, food, culture, adventure, spiritual vibe…)','bot');}
+    else if(chat.step===1){chat.reason=text;chat.step=2;addMsg('You loved the '+text+'! What is your approximate budget for the next trip? (in ₹, e.g. 15000)','bot');}
+    else if(chat.step===2){chat.budget=parseInt(text.replace(/\D/g,''))||20000;chat.step=3;addMsg('Perfect! Based on your love for '+chat.prevPlace+' and a budget of ₹'+chat.budget.toLocaleString()+', here are similar destinations 👇','bot');setTimeout(showDiscovery,600);}
+    else{addMsg('Your recommendations are already below! Click Explore on any card for the map 😊','bot');}
+  },500);
+}
+function addMsg(text,who){
+  var box=document.getElementById('chatBox');var div=document.createElement('div');
+  div.className='msg msg-'+who;
+  div.innerHTML='<div class="msg-avatar">'+(who==='bot'?'🌍':'🙂')+'</div><div class="msg-bubble">'+text+'</div>';
+  box.appendChild(div);box.scrollTop=box.scrollHeight;
+}
+function showDiscovery(){
+  var r=chat.reason.toLowerCase(),b=chat.budget,pl=chat.prevPlace.toLowerCase();
+  var scored=D.map(function(d){
+    if(d.name.toLowerCase().includes(pl)||d.state.toLowerCase().includes(pl))return{d:d,score:-1};
+    var s=0;
+    if(b>0&&d.budget<=b*1.2)s+=30;
+    if(/mountain|hill|cold|snow|trek|peak/.test(r)&&d.type.includes('Mountains'))s+=40;
+    if(/beach|sea|ocean|water|swim|coast/.test(r)&&d.type.includes('Beach'))s+=40;
+    if(/temple|spiritual|peace|god|religious|pilgrimage/.test(r)&&d.type.includes('Religious'))s+=40;
+    if(/adventure|sport|raft|bike|trek|kayak/.test(r)&&d.type.includes('Adventure'))s+=40;
+    if(/nature|green|forest|wildlife|jungle/.test(r)&&d.type.includes('Nature'))s+=40;
+    if(/culture|history|heritage|fort|palace/.test(r)&&(d.type.includes('Heritage')||d.type.includes('Culture')))s+=40;
+    if(/relax|calm|wellness|yoga|spa|ayurveda/.test(r)&&d.type.includes('Wellness'))s+=40;
+    if(/photo|scenic|view|beautiful/.test(r)&&d.type.includes('Photography'))s+=35;
+    s+=d.rating*5;return{d:d,score:s};
+  }).filter(function(x){return x.score>0;}).sort(function(a,b){return b.score-a.score;}).slice(0,6);
+  document.getElementById('discoveryGrid').innerHTML=scored.map(function(x){return destCardHTML(x.d);}).join('');
+  document.getElementById('discoveryResults').style.display='block';
+}
+
+function showToast(msg,type){
+  var t=document.getElementById('toast');t.textContent=msg;t.className=type||'success';t.style.display='block';
+  setTimeout(function(){t.style.display='none';},2800);
+}
+
+// INIT
+renderDestDB();calcBudget();renderSeason();renderReviews();updateStats();showApiAlert();
+</script>
+</body>
+</html>
